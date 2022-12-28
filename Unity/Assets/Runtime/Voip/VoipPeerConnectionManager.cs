@@ -97,6 +97,8 @@ namespace Ubiq.Voip
 
         private string prevIceServersString;
         private IceServerDetailsCollection iceServers;
+        
+        private NetworkId networkId = new NetworkId(98);
 
         public class OnPeerConnectionEvent : ExistingListEvent<VoipPeerConnection>
         {
@@ -131,6 +133,15 @@ namespace Ubiq.Voip
             defaultAudioSink = this.GetInterface<IAudioSink>();
         }
 
+        private void sendAudioToServer(uint durationRtpUnits, byte[] sample)
+        {
+            // context.Send("4", ReferenceCountedSceneGraphMessage.Rent(sample));
+            var message = ReferenceCountedSceneGraphMessage.Rent(sample.Length);
+            sample.CopyTo(new Span<byte>(message.bytes, message.start, message.length));
+            context.Send(networkId, 98, message);
+            Debug.Log(sample.Length);
+        }
+
         private void Start()
         {
             context = NetworkScene.Register(this);
@@ -138,6 +149,8 @@ namespace Ubiq.Voip
             client.OnJoinedRoom.AddListener(OnJoinedRoom);
             client.OnPeerRemoved.AddListener(OnPeerRemoved);
             client.OnRoomUpdated.AddListener(OnRoomUpdated);
+            Debug.Log("Added callback");
+            defaultAudioSource.OnAudioSourceEncodedSample += sendAudioToServer;
         }
 
         private void OnDestroy()

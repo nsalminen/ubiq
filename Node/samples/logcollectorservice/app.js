@@ -13,13 +13,14 @@
 // Import Ubiq types
 const { NetworkScene, RoomClient, LogCollector, UbiqTcpConnection } = require("../../ubiq");
 const fs = require('fs');
+const { AudioCollector } = require("../../ubiq/audiocollector");
 
 // Configuration
 eventType = 2;
 roomGuid = "6765c52b-3ad6-4fb0-9030-2c9a05dc4731";
 
 // Create a connection to a Server
-const connection = UbiqTcpConnection("nexus.cs.ucl.ac.uk", 8005);
+const connection = UbiqTcpConnection("localhost", 8005);
 
 // A NetworkScene
 const scene = new NetworkScene();
@@ -28,6 +29,7 @@ scene.addConnection(connection);
 // A RoomClient to join a Room
 const roomclient = new RoomClient(scene);
 const logcollector = new LogCollector(scene);
+const audiocollector = new AudioCollector(scene);
 
 // A list of open files to write events for particular peers into (we can close these when the peers leave the room)
 const files = {};

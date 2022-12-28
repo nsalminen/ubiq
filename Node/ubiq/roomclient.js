@@ -138,6 +138,7 @@ class RoomClient extends EventEmitter{
     // part of the interface for a network component
     processMessage(message){
         message = message.toObject();
+        console.log(message.type);
         var args = JSON.parse(message.args);
         switch(message.type){
             case "SetRoom":

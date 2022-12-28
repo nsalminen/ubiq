@@ -99,6 +99,7 @@ namespace Ubiq.Voip
                 audioSource.SetAudioSourceFormat(formats[0]);
                 // audioSink.SetAudioSinkFormat(formats[0]);
 
+            Debug.Log("Added callback");
             audioSource.OnAudioSourceEncodedSample += pc.SendAudio;
 
             pc.onconnectionstatechange += (state) =>
