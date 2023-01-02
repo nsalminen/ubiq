@@ -15,6 +15,9 @@ pythonProcess.on('exit', function (code) {
     console.log("Python child process exited with code " + code);
 });
 
+pythonProcess.on('error', function(err) {
+    console.log(err);
+});
 
 // Spawn a child Python process
 // const pythonProcess = spawn('python', ['./transcribe.py']);
@@ -28,7 +31,7 @@ pythonProcess.on('exit', function (code) {
 // pythonProcess.stdin.write('some data\n');
 const writer = new wav.FileWriter('audio.wav', {
     channels: 1,            // Number of channels (1 for mono, 2 for stereo)
-    sampleRate: 8000,       // Sample rate in Hz
+    sampleRate: 16000,      // Sample rate in Hz
     bitDepth: 16            // Bit depth (16 for G722)
 });
 
@@ -68,25 +71,24 @@ class AudioCollector extends EventEmitter{
     }
 
     processMessage(msg){
-        // console.log(msg.message.length);
         this.audioData = Buffer.concat([this.audioData, msg.message]);
-        console.log(this.audioData.length);
         
         while (this.audioData.length >= 256) {
             // Slice the first 256 bytes from the audioData buffer
             const chunk = this.audioData.slice(0, 256);
       
             // Write the chunk to the local audio file
-            appendFileSync('audio.g722', chunk);
+            // appendFileSync('audio.g722', chunk);
 
-            // Write the chunk to the WAV file
-            writer.write(chunk);
+            // // Write the chunk to the WAV file
+            // writer.write(chunk);
       
             // Remove the chunk from the audioData buffer
             this.audioData = this.audioData.slice(256);
-
+            // console.log(JSON.stringify(chunk.toJSON()))
+            // JSON.stringify(bufferOne);
             // Send data to the child Python process's stdin
-            // pythonProcess.stdin.write('some data\n');
+            // pythonProcess.stdin.write(JSON.stringify(chunk.toJSON()) + '\n');
         }
     }
 }

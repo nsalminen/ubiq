@@ -36,16 +36,20 @@ const files = {};
 
 function writeEventToPeerFile(peer, message){
     if(!files.hasOwnProperty(peer)){
-        files[peer] = fs.createWriteStream(`${peer}.log.json`,{
+        files[peer] = fs.createWriteStream(`logs/active/${peer}.log.json`,{
             flags: "a"
         });
+        console.log("Create file for peer " + peer);
     }
-    files[peer].write(JSON.stringify(message));
+    files[peer].write(JSON.stringify(message) + "\n");
 }
 
 function closePeerFile(peer){
     if(files.hasOwnProperty(peer)){
         delete files[peer];
+        fs.rename(`logs/active/${peer}.log.json`, `logs/archive/${peer}.log.json`, function(err) {
+            if ( err ) console.log('ERROR: ' + err);
+        });
     }
 }
 
@@ -54,14 +58,14 @@ roomclient.addListener("OnJoinedRoom", room => {
 });
 
 roomclient.addListener("OnPeerRemoved", peer =>{
-    closePeerFile(peer);
+    closePeerFile(peer.uuid);
 });
 
 // Register for log events from the log collector.
 logcollector.addListener("OnLogMessage", (type,message) => {
     if(type == eventType){ // Experiment
         peer = message.peer; // All log messages include the emitting peer
-        writeEventToPeerFile(peer,message);
+        writeEventToPeerFile(peer, message);
     }
 });
 
