@@ -71,7 +71,6 @@ class AudioCollector extends EventEmitter{
     }
 
     processMessage(msg){
-        // console.log(msg.message.length);
         this.audioData = Buffer.concat([this.audioData, msg.message]);
         
         while (this.audioData.length >= 256) {
@@ -79,17 +78,17 @@ class AudioCollector extends EventEmitter{
             const chunk = this.audioData.slice(0, 256);
       
             // Write the chunk to the local audio file
-            appendFileSync('audio.g722', chunk);
+            // appendFileSync('audio.g722', chunk);
 
-            // Write the chunk to the WAV file
-            writer.write(chunk);
+            // // Write the chunk to the WAV file
+            // writer.write(chunk);
       
             // Remove the chunk from the audioData buffer
             this.audioData = this.audioData.slice(256);
             // console.log(JSON.stringify(chunk.toJSON()))
             // JSON.stringify(bufferOne);
             // Send data to the child Python process's stdin
-            pythonProcess.stdin.write(JSON.stringify(chunk.toJSON()) + '\n');
+            // pythonProcess.stdin.write(JSON.stringify(chunk.toJSON()) + '\n');
         }
     }
 }
