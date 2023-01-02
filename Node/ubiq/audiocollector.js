@@ -88,7 +88,7 @@ class AudioCollector extends EventEmitter{
             // console.log(JSON.stringify(chunk.toJSON()))
             // JSON.stringify(bufferOne);
             // Send data to the child Python process's stdin
-            // pythonProcess.stdin.write(JSON.stringify(chunk.toJSON()) + '\n');
+            pythonProcess.stdin.write(JSON.stringify(chunk.toJSON()) + '\n');
         }
     }
 }
