@@ -32,8 +32,6 @@ namespace Ubiq.XR
         public Transform cameraContainer;
         public AnimationCurve cameraRubberBand;
 
-        LogEmitter transformLogger;
-
         private void Awake()
         {
             if(dontDestroyOnLoad)
@@ -55,8 +53,6 @@ namespace Ubiq.XR
 
         private void Start()
         {
-            transformLogger = new ExperimentLogEmitter(this);
-
             foreach (var item in GetComponentsInChildren<TeleportRay>())
             {
                 item.OnTeleport.AddListener(OnTeleport);
@@ -131,8 +127,6 @@ namespace Ubiq.XR
                     }
                 }
             }
-
-            // transformLogger.Log("Answer", headCamera.transform.position);
 
             var headProjectionXZ = transform.InverseTransformPoint(headCamera.transform.position);
             headProjectionXZ.y = 0;

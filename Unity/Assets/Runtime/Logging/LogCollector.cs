@@ -50,7 +50,7 @@ namespace Ubiq.Logging
 
         private IOutputStream[] outputStreams;
         private NetworkContext context;
-        private RoomClient roomClient;
+        public RoomClient roomClient { get; private set; }
 
         /// <summary>
         /// Stores whether the Active Collector has at some point changed 

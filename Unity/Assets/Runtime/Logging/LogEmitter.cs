@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Ubiq.Messaging;
+using Ubiq.Rooms;
 using Ubiq.Logging.Utf8Json;
 using Ubiq.Logging.Utf8Json.Resolvers;
 
@@ -244,7 +245,7 @@ namespace Ubiq.Logging
         protected virtual void WriteHeader(ref JsonWriter writer)
         {
             writer.Write("ticks", DateTime.Now.Ticks);
-            writer.Write("peer", collector.Id);
+            writer.Write("peer", collector.roomClient.Me.UUID);
         }
     }
 

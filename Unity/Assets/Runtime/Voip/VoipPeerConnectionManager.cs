@@ -99,6 +99,7 @@ namespace Ubiq.Voip
         private IceServerDetailsCollection iceServers;
         
         private NetworkId networkId = new NetworkId(98);
+        private G722AudioDecoder decoder = new G722AudioDecoder();
 
         public class OnPeerConnectionEvent : ExistingListEvent<VoipPeerConnection>
         {
@@ -136,10 +137,13 @@ namespace Ubiq.Voip
         private void sendAudioToServer(uint durationRtpUnits, byte[] sample)
         {
             // context.Send("4", ReferenceCountedSceneGraphMessage.Rent(sample));
-            var message = ReferenceCountedSceneGraphMessage.Rent(sample.Length);
-            sample.CopyTo(new Span<byte>(message.bytes, message.start, message.length));
+            short[] decodedSampleShort = decoder.Decode(sample);
+            byte[] decodedSampleByte = new byte[decodedSampleShort.Length * sizeof(short)];
+            Buffer.BlockCopy(decodedSampleShort, 0, decodedSampleByte, 0, decodedSampleByte.Length);
+
+            var message = ReferenceCountedSceneGraphMessage.Rent(decodedSampleByte.Length);
+            decodedSampleByte.CopyTo(new Span<byte>(message.bytes, message.start, message.length));
             context.Send(networkId, 98, message);
-            Debug.Log(sample.Length);
         }
 
         private void Start()
