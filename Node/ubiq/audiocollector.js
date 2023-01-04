@@ -6,7 +6,7 @@ const wav = require('wav');
 const spawn = require("child_process").spawn;
 
 
-const pythonProcess = spawn('python',["-u", "transcribe.py"]);
+const pythonProcess = spawn('python',["-u", "transcribe_azure.py"]);
 pythonProcess.stdout.on('data', (data) => {
   console.log("PYTHON SENT:", data.toString());
 });
