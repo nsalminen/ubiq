@@ -153,7 +153,6 @@ namespace Ubiq.Voip
             client.OnJoinedRoom.AddListener(OnJoinedRoom);
             client.OnPeerRemoved.AddListener(OnPeerRemoved);
             client.OnRoomUpdated.AddListener(OnRoomUpdated);
-            Debug.Log("Added callback");
             defaultAudioSource.OnAudioSourceEncodedSample += sendAudioToServer;
         }
 
