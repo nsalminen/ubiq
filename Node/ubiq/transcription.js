@@ -3,21 +3,23 @@ const { nextTick } = require('process');
 const { Stream, EventEmitter, Writable } = require('stream');
 const { NetworkId, Message } = require("./messaging");
 const wav = require('wav');
+const { throws } = require('assert');
 const spawn = require("child_process").spawn;
+const { LogCollectorMessage } = require("./logcollector");
 
 
-const pythonProcess = spawn('python',["-u", "transcribe_azure.py"]);
-pythonProcess.stdout.on('data', (data) => {
-  console.log("PYTHON SENT:", data.toString());
-});
+// const pythonProcess = spawn('python',["-u", "transcribe_azure.py"]);
+// pythonProcess.stdout.on('data', (data) => {
+//   console.log("PYTHON SENT:", data.toString());
+// });
 
-pythonProcess.on('exit', function (code) { 
-    console.log("Python child process exited with code " + code);
-});
+// pythonProcess.on('exit', function (code) { 
+//     console.log("Python child process exited with code " + code);
+// });
 
-pythonProcess.on('error', function(err) {
-    console.log(err);
-});
+// pythonProcess.on('error', function(err) {
+//     console.log(err);
+// });
 
 // Spawn a child Python process
 // const pythonProcess = spawn('python', ['./transcribe.py']);
@@ -44,7 +46,7 @@ const writer = new wav.FileWriter('audio.wav', {
 // Until this is done, or resume() is called, the streams will be paused. In paused mode
 // the streams will discard any events, so make sure to connect the streams to the sink
 // before calling startCollection().
-class AudioCollector extends EventEmitter{
+class TranscriptionService extends EventEmitter{
     constructor(scene){
         super();
         this.objectId = new NetworkId(98);
@@ -53,6 +55,22 @@ class AudioCollector extends EventEmitter{
 
         this.context = scene.register(this);
         this.registerRoomClientEvents();
+        this.pythonProcess = null;
+    }
+
+    start(broadcastResults = false) {
+        this.pythonProcess = spawn('python',["-u", "../transcription/transcribe_azure.py"]);
+        this.pythonProcess.stdout.on('data', (data) => {    
+            if (broadcastResults){
+                this.sendResponse(data.toString());
+            }
+        });
+    }
+
+    sendResponse(data) {
+        for(const peer of this.roomClient.getPeers()){
+            this.context.send(peer.networkId, this.componentId, Message.Create(this.objectId, this.networkId, {"data": data, "sourcePeer": "TODO"}));
+        };
     }
 
     registerRoomClientEvents(){
@@ -80,7 +98,7 @@ class AudioCollector extends EventEmitter{
             // Write the chunk to the local audio file
             // appendFileSync('audio.g722', chunk);
 
-            // // Write the chunk to the WAV file
+            // Write the chunk to the WAV file
             // writer.write(chunk);
       
             // Remove the chunk from the audioData buffer
@@ -88,11 +106,25 @@ class AudioCollector extends EventEmitter{
             // console.log(JSON.stringify(chunk.toJSON()))
             // JSON.stringify(bufferOne);
             // Send data to the child Python process's stdin
-            pythonProcess.stdin.write(JSON.stringify(chunk.toJSON()) + '\n');
+            if (this.pythonProcess) {
+                this.pythonProcess.stdin.write(JSON.stringify(chunk.toJSON()) + '\n');
+            }
+        }
+    }
+
+    onResponse(cb) {
+        if (this.pythonProcess) {
+            this.pythonProcess.stdout.on('data', (data) => cb(data.toString()));
+        }
+    }
+    
+    onError(cb) {
+        if (this.pythonProcess) {
+            this.pythonProcess.stderr.on('data', (data) => cb(data));
         }
     }
 }
 
 module.exports = {
-    AudioCollector
+    TranscriptionService
 };
