@@ -11,9 +11,9 @@
 // has left the room.
 
 // Import Ubiq types
-const { NetworkScene, RoomClient, LogCollector, UbiqTcpConnection } = require("../../ubiq");
+const { NetworkScene, RoomClient, LogCollector, UbiqTcpConnection } = require("../../../ubiq");
 const fs = require('fs');
-const { AudioCollector } = require("../../ubiq/audiocollector");
+const { TranscriptionService } = require("../../../ubiq/transcription");
 
 // Configuration
 eventType = 2;
@@ -29,7 +29,17 @@ scene.addConnection(connection);
 // A RoomClient to join a Room
 const roomclient = new RoomClient(scene);
 const logcollector = new LogCollector(scene);
-const audiocollector = new AudioCollector(scene);
+// const transcriptionservice = new TranscriptionService(scene);
+
+// transcriptionservice.start(broadcastResults = true);
+
+// transcriptionservice.onResponse((data) => {
+//     console.log(data.toString());
+// });
+
+// transcriptionservice.onError((err) => {
+    // console.log(err.toString());
+// });
 
 // A list of open files to write events for particular peers into (we can close these when the peers leave the room)
 const files = {};
