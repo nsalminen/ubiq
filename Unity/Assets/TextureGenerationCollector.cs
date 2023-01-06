@@ -9,7 +9,7 @@ using Ubiq.Rooms;
 using System;
 using System.Text;
 
-[NetworkComponentId(typeof(TranscriptionCollector), ComponentId)]
+[NetworkComponentId(typeof(TextureGenerationCollector), ComponentId)]
 public class TextureGenerationCollector : MonoBehaviour, INetworkComponent
 {
     public const ushort ComponentId = 97;
@@ -39,6 +39,6 @@ public class TextureGenerationCollector : MonoBehaviour, INetworkComponent
 
     public void ProcessMessage(ReferenceCountedSceneGraphMessage data)
     {
-        Debug.Log(data.FromJson<Message>().data);
+        Debug.Log(data);
     }
 }

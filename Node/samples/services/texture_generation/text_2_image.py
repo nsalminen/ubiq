@@ -19,7 +19,7 @@ def generateTextureFromPrompt(pipe, generator, prompt):
         #print("-------", prompt)
         busy = True
         
-        image = pipe(prompt, guidance_scale=5.5, num_inference_steps=5, generator=generator).images[0]
+        image = pipe(prompt, guidance_scale=5.5, num_inference_steps=15, generator=generator).images[0]
         md5_name = hashlib.md5(image.tobytes()).hexdigest()
         folder = os.path.dirname(os.path.abspath(__file__))
         fullpath = os.path.join(folder, "outputs", md5_name + ".png")
