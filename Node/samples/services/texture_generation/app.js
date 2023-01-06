@@ -14,6 +14,7 @@
 const { NetworkScene, RoomClient, LogCollector, UbiqTcpConnection } = require("../../../ubiq");
 const fs = require('fs');
 const { TranscriptionService } = require("../../../ubiq/transcription");
+const { TextureGenerationService } = require("../../../ubiq/texturegeneration");
 
 // Configuration
 eventType = 2;
@@ -30,17 +31,30 @@ scene.addConnection(connection);
 const roomclient = new RoomClient(scene);
 // const logcollector = new LogCollector(scene);
 const transcriptionservice = new TranscriptionService(scene);
+const textureGeneration = new TextureGenerationService(scene);
 
 transcriptionservice.start(broadcastResults = true);
 
 transcriptionservice.onResponse((data) => {
     console.log(data.toString()); // Here you can do whatever you want with the data
+    textureGeneration.execute(data.toString());
 });
 
 transcriptionservice.onError((err) => {
     console.log(err.toString());
 });
 
+textureGeneration.onResponse((data) => {
+    console.log(data.toString()); // Here you can do whatever you want with the data
+    
+    for(const peer of this.roomClient.getPeers()){
+            this.context.send(peer.networkId, this.componentId, {type: "texture generated", peer: "TODO", data: data});
+        };
+});
+
+textureGeneration.onError((err) => {
+    console.log(err.toString());
+});
 // // A list of open files to write events for particular peers into (we can close these when the peers leave the room)
 // const files = {};
 
