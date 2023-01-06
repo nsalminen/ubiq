@@ -10,9 +10,11 @@ import json
 def generateTextureFromPrompt(pipe, generator, prompt):
     image = pipe(prompt, guidance_scale=5.5, num_inference_steps=15, generator=generator).images[0]
     md5_name = hashlib.md5(image.tobytes()).hexdigest()
-    image.save(os.path.join("outputs", md5_name + ".png"))
+    folder = os.path.dirname(os.path.abspath(__file__))
+    fullpath = os.path.join(folder, "outputs", md5_name + ".png")
+    image.save(fullpath)
     
-    print(md5_name)
+    print(fullpath)
 
 def recognize_from_stdin():
     print("Start to generate textures...")
