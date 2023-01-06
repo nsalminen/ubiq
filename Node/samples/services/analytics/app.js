@@ -38,7 +38,7 @@ const logcollector = new LogCollector(scene);
 // });
 
 // transcriptionservice.onError((err) => {
-//     console.log(err);
+    // console.log(err.toString());
 // });
 
 // A list of open files to write events for particular peers into (we can close these when the peers leave the room)

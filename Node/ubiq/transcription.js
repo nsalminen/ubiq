@@ -56,20 +56,27 @@ class TranscriptionService extends EventEmitter{
         this.context = scene.register(this);
         this.registerRoomClientEvents();
         this.pythonProcess = null;
+        this.resultRegex = /text="([^"]*)"/;
     }
 
     start(broadcastResults = false) {
         this.pythonProcess = spawn('python',["-u", "../transcription/transcribe_azure.py"]);
-        this.pythonProcess.stdout.on('data', (data) => {    
+        this.pythonProcess.stdout.on('data', (data) => {
             if (broadcastResults){
-                this.sendResponse(data.toString());
+                var response = data.toString();
+                if (response.startsWith("RECOGNIZED: ")){
+                    let match = this.resultRegex.exec(response);
+                    if (match[1]) {
+                        this.sendResponse(match[1]);
+                    }
+                }
             }
         });
     }
 
     sendResponse(data) {
         for(const peer of this.roomClient.getPeers()){
-            this.context.send(peer.networkId, this.componentId, Message.Create(this.objectId, this.networkId, {"data": data, "sourcePeer": "TODO"}));
+            this.context.send(peer.networkId, this.componentId, {type: "recognizedText", peer: "TODO", data: data});
         };
     }
 
