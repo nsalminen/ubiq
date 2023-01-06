@@ -6,22 +6,36 @@ import os
 import sys
 import json
 
+queue = []
+pipe = None
+generator = None
+busy = False
+done = False
 
 def generateTextureFromPrompt(pipe, generator, prompt):
-    image = pipe(prompt, guidance_scale=5.5, num_inference_steps=15, generator=generator).images[0]
-    md5_name = hashlib.md5(image.tobytes()).hexdigest()
-    folder = os.path.dirname(os.path.abspath(__file__))
-    fullpath = os.path.join(folder, "outputs", md5_name + ".png")
-    image.save(fullpath)
-    
-    print(fullpath)
+    global busy
+    prompt = prompt.replace("b'", "").replace(".\\n'","") 
+    if(prompt != "" and busy == False):
+        print("-------", prompt)
+        busy = True
+        
+        image = pipe(prompt, guidance_scale=5.5, num_inference_steps=5, generator=generator).images[0]
+        md5_name = hashlib.md5(image.tobytes()).hexdigest()
+        folder = os.path.dirname(os.path.abspath(__file__))
+        fullpath = os.path.join(folder, "outputs", md5_name + ".png")
+        image.save(fullpath)
+        print(fullpath)
+        
+        busy = False
 
 def recognize_from_stdin():
-    print("Start to generate textures...")
-    pipe = StableDiffusionPipeline.from_pretrained("CompVis/stable-diffusion-v1-4", revision="fp16", torch_dtype=torch.float16)
-    pipe.to("cuda")
-    generator = torch.Generator("cuda").manual_seed(1024)
-    done = False
+    global pipe, generator, done, busy
+    
+    if(pipe == None):
+        print("Initialize generate textures...")
+        pipe = StableDiffusionPipeline.from_pretrained("CompVis/stable-diffusion-v1-4", revision="fp16", torch_dtype=torch.float16)
+        pipe.to("cuda")
+        generator = torch.Generator("cuda").manual_seed(1024)
     
     # Write stdin to the stream
     while not done:

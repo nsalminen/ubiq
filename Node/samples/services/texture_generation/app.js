@@ -37,8 +37,14 @@ transcriptionservice.start(broadcastResults = true);
 
 transcriptionservice.onResponse((data) => {
     console.log("Used For Texture Generation...");
-    console.log(data.toString()); // Here you can do whatever you want with the data
-    textureGeneration.execute(data.toString());
+     // Here you can do whatever you want with the data
+    if (data.startsWith("RECOGNIZED: ")){
+        let match = transcriptionservice.resultRegex.exec(data);
+        console.log(match);
+        if (match[1]){
+            textureGeneration.execute(match[1]);    
+        }
+    }
 });
 
 transcriptionservice.onError((err) => {
@@ -47,7 +53,7 @@ transcriptionservice.onError((err) => {
 
 textureGeneration.onResponse((data) => {
     console.log(data.toString()); // Here you can do whatever you want with the data
-    
+    console.log("Done...");
     for(const peer of textureGeneration.roomClient.getPeers()){
             textureGeneration.context.send(peer.networkId, textureGeneration.componentId, {type: "texture generated", peer: "TODO", data: data});
         };
