@@ -36,6 +36,7 @@ const textureGeneration = new TextureGenerationService(scene);
 transcriptionservice.start(broadcastResults = true);
 
 transcriptionservice.onResponse((data) => {
+    console.log("Used For Texture Generation...");
     console.log(data.toString()); // Here you can do whatever you want with the data
     textureGeneration.execute(data.toString());
 });
