@@ -48,8 +48,8 @@ transcriptionservice.onError((err) => {
 textureGeneration.onResponse((data) => {
     console.log(data.toString()); // Here you can do whatever you want with the data
     
-    for(const peer of this.roomClient.getPeers()){
-            this.context.send(peer.networkId, this.componentId, {type: "texture generated", peer: "TODO", data: data});
+    for(const peer of textureGeneration.roomClient.getPeers()){
+            textureGeneration.context.send(peer.networkId, textureGeneration.componentId, {type: "texture generated", peer: "TODO", data: data});
         };
 });
 
