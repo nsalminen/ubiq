@@ -14,9 +14,9 @@ done = False
 
 def generateTextureFromPrompt(pipe, generator, prompt):
     global busy
-    prompt = prompt.replace("b'", "").replace(".\\n'","") 
+    prompt = prompt.decode()
     if(prompt != "" and busy == False):
-        print("-------", prompt)
+        #print("-------", prompt)
         busy = True
         
         image = pipe(prompt, guidance_scale=5.5, num_inference_steps=5, generator=generator).images[0]
@@ -43,7 +43,7 @@ def recognize_from_stdin():
             line = sys.stdin.buffer.readline()
             if len(line) == 0:
                 continue
-            generateTextureFromPrompt(pipe, generator, str(line))
+            generateTextureFromPrompt(pipe, generator, line)
         except KeyboardInterrupt:
             break
 

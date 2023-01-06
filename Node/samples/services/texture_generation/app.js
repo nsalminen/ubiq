@@ -53,10 +53,12 @@ transcriptionservice.onError((err) => {
 
 textureGeneration.onResponse((data) => {
     console.log(data.toString()); // Here you can do whatever you want with the data
-    console.log("Done...");
-    for(const peer of textureGeneration.roomClient.getPeers()){
+    if (data.endsWith(".png")){
+        console.log(data.toString());
+        for(const peer of textureGeneration.roomClient.getPeers()){
             textureGeneration.context.send(peer.networkId, textureGeneration.componentId, {type: "texture generated", peer: "TODO", data: data});
         };
+    }
 });
 
 textureGeneration.onError((err) => {
