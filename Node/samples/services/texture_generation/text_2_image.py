@@ -22,10 +22,10 @@ def generateTextureFromPrompt(pipe, generator, prompt):
         image = pipe(prompt, guidance_scale=5.5, num_inference_steps=15, generator=generator).images[0]
         md5_name = hashlib.md5(image.tobytes()).hexdigest()
         folder = os.path.dirname(os.path.abspath(__file__))
-        fullpath = os.path.join(folder, "outputs", md5_name + ".png")
+        file_name = md5_name + ".png"
+        fullpath = os.path.join(folder, "outputs", file_name)
         image.save(fullpath)
-        print(fullpath)
-        
+        print(file_name)
         busy = False
 
 def recognize_from_stdin():
