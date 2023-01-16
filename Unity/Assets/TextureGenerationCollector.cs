@@ -9,6 +9,7 @@ using Ubiq.Rooms;
 using System;
 using System.IO;
 using System.Text;
+using UnityEngine.Networking;
 
 [NetworkComponentId(typeof(TextureGenerationCollector), ComponentId)]
 public class TextureGenerationCollector : MonoBehaviour, INetworkComponent
@@ -17,7 +18,7 @@ public class TextureGenerationCollector : MonoBehaviour, INetworkComponent
     public NetworkId networkId = new NetworkId(97);
     private NetworkContext context;
     public GameObject plane;
-    public string assetPath;
+    public string serverBaseUrl;
 
     [Serializable]
     private struct Message
@@ -31,7 +32,6 @@ public class TextureGenerationCollector : MonoBehaviour, INetworkComponent
     void Start()
     {
         context = NetworkScene.Register(this);
-        assetPath = Application.streamingAssetsPath;
     }
 
     // Update is called once per frame
@@ -40,18 +40,32 @@ public class TextureGenerationCollector : MonoBehaviour, INetworkComponent
         
     }
 
-    void LoadTexture(string fullPath)
+    private void SetTexture(Texture2D newTexture) {
+        Debug.Log("Setting texture");
+        plane.GetComponent<Renderer>().material.mainTexture = newTexture;
+    }
+
+    void LoadPNGFromURL(string url, System.Action<Texture2D> onComplete)
     {
-        File.Copy(fullPath, Path.Combine(assetPath, "panel.png"), true);
-        string panelUrl = assetPath + "/" + "panel.png";
-        byte[] pngBytes = System.IO.File.ReadAllBytes(panelUrl);
-        Texture2D tex = new Texture2D(2, 2);
-        ImageConversion.LoadImage(tex, pngBytes);
-        plane.GetComponent<Renderer>().material.mainTexture = tex;
+        UnityWebRequest www = UnityWebRequestTexture.GetTexture(url);
+        www.SendWebRequest().completed += operation =>
+        {
+            if (www.isNetworkError || www.isHttpError)
+            {
+                Debug.Log(www.error);
+                onComplete(null);
+            }
+            else
+            {
+                Texture2D texture = DownloadHandlerTexture.GetContent(www);
+                onComplete(texture);
+            }
+        };
     }
     
     public void ProcessMessage(ReferenceCountedSceneGraphMessage data)
     {
-        LoadTexture(data.FromJson<Message>().data.ToString().Trim('\r', '\n'));
+        string fileName = data.FromJson<Message>().data.ToString().Trim('\r', '\n');
+        LoadPNGFromURL(serverBaseUrl + fileName, SetTexture);
     }
 }
