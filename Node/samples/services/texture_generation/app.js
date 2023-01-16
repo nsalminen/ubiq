@@ -17,6 +17,8 @@ const { TranscriptionService } = require("../../../ubiq/transcription");
 const { TextureGenerationService } = require("../../../ubiq/texturegeneration");
 const express = require('express');
 const app = express();
+const commandRegex = /(?:transform|create|make|set|change|turn)(?: the| an| some)? (?:(?:(.*?) (?:(?:to|into|look like|appear like|seem like|)) (.*)))/i;
+var textureTarget = null;
 
 app.use(express.static('outputs'));
 app.listen(3000, function () {
@@ -44,10 +46,15 @@ transcriptionservice.start(broadcastResults = true);
 transcriptionservice.onResponse((data) => {
     console.log("Used For Texture Generation...");
     if (data.startsWith("RECOGNIZED: ")){
-        let match = transcriptionservice.resultRegex.exec(data);
-        console.log(match);
-        if (match[1]){
-            textureGeneration.execute(match[1]);
+        let resultMatch = transcriptionservice.resultRegex.exec(data);
+        console.log(resultMatch);
+        if (resultMatch[1]){
+            let commandMatch = commandRegex.exec(resultMatch[1]);
+            if (commandMatch[1] && commandMatch[2]){
+                console.log(commandMatch[1], commandMatch[2]);
+                textureTarget = commandMatch[1];
+                textureGeneration.execute(commandMatch[2]);
+            }
         }
     }
 });
@@ -60,7 +67,7 @@ textureGeneration.onResponse((data) => {
     console.log(data.toString()); // Here you can do whatever you want with the data
     if (data.includes(".png")){
         for(const peer of textureGeneration.roomClient.getPeers()){
-            textureGeneration.context.send(peer.networkId, textureGeneration.componentId, {type: "texture generated", peer: "TODO", data: data});
+            textureGeneration.context.send(peer.networkId, textureGeneration.componentId, {type: "TextureGeneration", target: textureTarget, data: data});
         };
     }
 });

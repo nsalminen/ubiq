@@ -17,16 +17,23 @@ public class TextureGenerationCollector : MonoBehaviour, INetworkComponent
     public const ushort ComponentId = 97;
     public NetworkId networkId = new NetworkId(97);
     private NetworkContext context;
-    public GameObject plane;
     public string serverBaseUrl;
 
     [Serializable]
     private struct Message
     {
         public string type;
-        public string peer; // TODO: implement the source peer of this text
+        public string target;
         public string data;
     }
+
+    [Serializable]
+    public struct ObjectTargetKeywords {
+        public GameObject targetObject;
+        public string[] targetKeywords;
+    }
+    public ObjectTargetKeywords[] targets;
+    private GameObject currentTarget;
 
     // Start is called before the first frame update
     void Start()
@@ -41,8 +48,7 @@ public class TextureGenerationCollector : MonoBehaviour, INetworkComponent
     }
 
     private void SetTexture(Texture2D newTexture) {
-        Debug.Log("Setting texture");
-        plane.GetComponent<Renderer>().material.mainTexture = newTexture;
+        currentTarget.GetComponent<Renderer>().material.mainTexture = newTexture;
     }
 
     void LoadPNGFromURL(string url, System.Action<Texture2D> onComplete)
@@ -65,7 +71,19 @@ public class TextureGenerationCollector : MonoBehaviour, INetworkComponent
     
     public void ProcessMessage(ReferenceCountedSceneGraphMessage data)
     {
-        string fileName = data.FromJson<Message>().data.ToString().Trim('\r', '\n');
-        LoadPNGFromURL(serverBaseUrl + fileName, SetTexture);
+        Message message = data.FromJson<Message>();
+        for (int i = 0; i < targets.Length; i++) {
+            for (int j = 0; j < targets[i].targetKeywords.Length; j++) {
+                if (message.target.Contains(targets[i].targetKeywords[j])) {
+                    currentTarget = targets[i].targetObject;
+                }
+            }
+        }
+        if (currentTarget != null) {
+            string fileName = message.data.ToString().Trim('\r', '\n');
+            LoadPNGFromURL(serverBaseUrl + fileName, SetTexture);
+        } else {
+            Debug.Log("No target found for " + message.target);
+        }
     }
 }
