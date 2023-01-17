@@ -5,6 +5,12 @@ import hashlib
 import os
 import sys
 import json
+import argparse
+
+parser = argparse.ArgumentParser()
+parser.add_argument("--model", type=str, default="stabilityai/stable-diffusion-2")
+parser.add_argument("--output_folder", type=str, default="./output")
+args = parser.parse_args()
 
 queue = []
 pipe = None
@@ -23,9 +29,9 @@ def generateTextureFromPrompt(pipe, generator, prompt):
             prompt, guidance_scale=5.5, num_inference_steps=15, generator=generator
         ).images[0]
         md5_name = hashlib.md5(image.tobytes()).hexdigest()
-        folder = os.path.dirname(os.path.abspath(__file__))
+        # folder = os.path.dirname(os.path.abspath(__file__))
         file_name = md5_name + ".png"
-        fullpath = os.path.join(folder, "outputs", file_name)
+        fullpath = os.path.join(args.output_folder, file_name)
         image.save(fullpath)
         print(file_name)
         busy = False
@@ -35,9 +41,15 @@ def recognize_from_stdin():
     global pipe, generator, done, busy
 
     if pipe == None:
-        print("Initialize generate textures...")
+        print(
+            "Initializing texture generation model "
+            + args.model
+            + " (output folder: "
+            + args.output_folder
+            + "."
+        )
         pipe = StableDiffusionPipeline.from_pretrained(
-            "CompVis/stable-diffusion-v1-4", revision="fp16", torch_dtype=torch.float16
+            args.model, revision="fp16", torch_dtype=torch.float16
         )
         pipe.to("cuda")
         generator = torch.Generator("cuda").manual_seed(1024)

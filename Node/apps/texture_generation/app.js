@@ -2,16 +2,13 @@ const { NetworkScene, RoomClient, LogCollector, UbiqTcpConnection } = require(".
 const fs = require("fs");
 const { TranscriptionService } = require("../../services/speech_to_text/service");
 const { TextureGenerationService } = require("../../services/image_generation/service");
-const express = require("express");
-const app = express();
+const { FileServer } = require("../../services/file_server/service");
 const commandRegex =
     /(?:transform|create|make|set|change|turn)(?: the| an| some)? (?:(?:(.*?) (?:(?:to|into|look like|appear like|seem like|)) (.*)))/i;
 var textureTarget = null;
 
-app.use(express.static("outputs"));
-app.listen(3000, function () {
-    console.log("Image server listening on port 3000!");
-});
+const file_server = new FileServer((directory = "data"));
+file_server.start();
 
 // Configuration
 eventType = 2;
