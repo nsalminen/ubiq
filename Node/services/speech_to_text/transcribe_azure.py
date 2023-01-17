@@ -6,25 +6,30 @@ from azure.cognitiveservices.speech.audio import AudioStreamFormat, AudioConfig
 
 
 def recognize_from_stdin():
-    speech_config = speechsdk.SpeechConfig(subscription=os.environ.get('SPEECH_KEY'), region=os.environ.get('SPEECH_REGION'))
-    speech_config.speech_recognition_language="en-US"
+    speech_config = speechsdk.SpeechConfig(
+        subscription=os.environ.get("SPEECH_KEY"),
+        region=os.environ.get("SPEECH_REGION"),
+    )
+    speech_config.speech_recognition_language = "en-US"
     audioFormat = AudioStreamFormat(16000, 16, 1)
     custom_push_stream = speechsdk.audio.PushAudioInputStream(stream_format=audioFormat)
     audio_config = AudioConfig(stream=custom_push_stream)
 
-    speech_recognizer = speechsdk.SpeechRecognizer(speech_config=speech_config, audio_config=audio_config)
+    speech_recognizer = speechsdk.SpeechRecognizer(
+        speech_config=speech_config, audio_config=audio_config
+    )
     print("> Azure Speech client ready to receive chunks")
     done = False
 
     def recognizing_cb(evt: speechsdk.SpeechRecognitionEventArgs):
-        print('RECOGNIZING: {}'.format(evt))
+        print("RECOGNIZING: {}".format(evt))
 
     def recognized_cb(evt: speechsdk.SpeechRecognitionEventArgs):
-        print('RECOGNIZED: {}'.format(evt))
+        print("RECOGNIZED: {}".format(evt))
 
     def stop_cb(evt: speechsdk.SessionEventArgs):
         """callback that signals to stop continuous recognition"""
-        print('CLOSING on {}'.format(evt))
+        print("CLOSING on {}".format(evt))
         nonlocal done
         done = True
 
@@ -52,6 +57,7 @@ def recognize_from_stdin():
             custom_push_stream.write(data)
         except KeyboardInterrupt:
             break
+
 
 recognize_from_stdin()
 print("> Azure Speech client stopped receiving chunks.")

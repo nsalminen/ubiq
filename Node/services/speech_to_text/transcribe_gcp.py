@@ -3,10 +3,6 @@ import json
 from google.cloud import speech
 
 
-# f=open("test.raw",'wb')
-# for chunk in read_stdin_gen:
-#         f.write(chunk)
-
 def read_stdin():
     readline = sys.stdin.readline()
     while readline:
@@ -14,13 +10,14 @@ def read_stdin():
         yield readline
         readline = sys.stdin.readline()
 
+
 read_stdin_gen = read_stdin()
 
 config = speech.RecognitionConfig(
     encoding=speech.RecognitionConfig.AudioEncoding.LINEAR16,
     sample_rate_hertz=16000,
     language_code="en-US",
-    audio_channel_count=1
+    audio_channel_count=1,
 )
 streaming_config = speech.StreamingRecognitionConfig(config=config)
 client = speech.SpeechClient()

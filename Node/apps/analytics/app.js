@@ -1,19 +1,19 @@
-// The LogCollectorService sample creates a programmatic peer that joins a room 
+// The LogCollectorService sample creates a programmatic peer that joins a room
 // and records all Experiment Log Events (0x2) it encounters.
 //
-// To achieve this, we first create a NetworkScene (the Peer), and create a 
-// connection for it to the server (which is specified here as Nexus). Then we 
-// add a RoomClient and LogCollector component(s). These join a room and recieve 
+// To achieve this, we first create a NetworkScene (the Peer), and create a
+// connection for it to the server (which is specified here as Nexus). Then we
+// add a RoomClient and LogCollector component(s). These join a room and recieve
 // log messages.
-// 
-// The LogCollector uses the Id of the peers to decide where to write the events. 
-// It creates new files on demand, and closes them when the corresponding Peer 
+//
+// The LogCollector uses the Id of the peers to decide where to write the events.
+// It creates new files on demand, and closes them when the corresponding Peer
 // has left the room.
 
 // Import Ubiq types
 const { NetworkScene, RoomClient, LogCollector, UbiqTcpConnection } = require("../../../ubiq");
-const fs = require('fs');
-const { TranscriptionService } = require("../../../ubiq/transcription");
+const fs = require("fs");
+const { TranscriptionService } = require("../../services/speech_to_text/service");
 
 // Configuration
 eventType = 2;
@@ -38,42 +38,43 @@ const logcollector = new LogCollector(scene);
 // });
 
 // transcriptionservice.onError((err) => {
-    // console.log(err.toString());
+// console.log(err.toString());
 // });
 
 // A list of open files to write events for particular peers into (we can close these when the peers leave the room)
 const files = {};
 
-function writeEventToPeerFile(peer, message){
-    if(!files.hasOwnProperty(peer)){
-        files[peer] = fs.createWriteStream(`logs/active/${peer}.log.json`,{
-            flags: "a"
+function writeEventToPeerFile(peer, message) {
+    if (!files.hasOwnProperty(peer)) {
+        files[peer] = fs.createWriteStream(`logs/active/${peer}.log.json`, {
+            flags: "a",
         });
         console.log("Create file for peer " + peer);
     }
     files[peer].write(JSON.stringify(message) + "\n");
 }
 
-function closePeerFile(peer){
-    if(files.hasOwnProperty(peer)){
+function closePeerFile(peer) {
+    if (files.hasOwnProperty(peer)) {
         delete files[peer];
-        fs.rename(`logs/active/${peer}.log.json`, `logs/archive/${peer}.log.json`, function(err) {
-            if ( err ) console.log('ERROR: ' + err);
+        fs.rename(`logs/active/${peer}.log.json`, `logs/archive/${peer}.log.json`, function (err) {
+            if (err) console.log("ERROR: " + err);
         });
     }
 }
 
-roomclient.addListener("OnJoinedRoom", room => {
+roomclient.addListener("OnJoinedRoom", (room) => {
     console.log(room.joincode);
 });
 
-roomclient.addListener("OnPeerRemoved", peer =>{
+roomclient.addListener("OnPeerRemoved", (peer) => {
     closePeerFile(peer.uuid);
 });
 
 // Register for log events from the log collector.
-logcollector.addListener("OnLogMessage", (type,message) => {
-    if(type == eventType){ // Experiment
+logcollector.addListener("OnLogMessage", (type, message) => {
+    if (type == eventType) {
+        // Experiment
         peer = message.peer; // All log messages include the emitting peer
         writeEventToPeerFile(peer, message);
     }
