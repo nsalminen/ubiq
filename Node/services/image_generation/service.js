@@ -23,7 +23,7 @@ class TextureGenerationService extends EventEmitter {
     }
 
     start(broadcastResults = false) {
-        this.pythonProcess = spawn("python", ["-u", "../texture_generation/text_2_image.py"]);
+        this.pythonProcess = spawn("python", ["-u", "../../services/image_generation/text_2_image.py"]);
         this.pythonProcess.stdout.on("data", (data) => {
             if (broadcastResults) {
                 var response = data.toString();
