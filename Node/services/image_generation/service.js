@@ -28,6 +28,8 @@ class TextureGenerationService extends EventEmitter {
             "../../services/image_generation/text_2_image.py",
             "--output_folder",
             "../../apps/texture_generation/data",
+            "--prompt_postfix",
+            "', in the style of Yayoi Kusama'"
         ]);
         this.pythonProcess.stdout.on("data", (data) => {
             if (broadcastResults) {

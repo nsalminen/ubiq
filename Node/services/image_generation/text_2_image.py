@@ -10,6 +10,7 @@ import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument("--model", type=str, default="stabilityai/stable-diffusion-2")
 parser.add_argument("--output_folder", type=str, default="./output")
+parser.add_argument("--prompt_postfix", type=str, default="")
 args = parser.parse_args()
 
 queue = []
@@ -25,6 +26,7 @@ def generateTextureFromPrompt(pipe, generator, prompt):
     if prompt != "" and busy == False:
         busy = True
 
+        prompt += args.prompt_postfix
         image = pipe(
             prompt, guidance_scale=5.5, num_inference_steps=15, generator=generator
         ).images[0]
