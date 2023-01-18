@@ -10,6 +10,7 @@ using System;
 using System.IO;
 using System.Text;
 using UnityEngine.Networking;
+using Ubiq.XR;
 
 [NetworkComponentId(typeof(TextureGenerationCollector), ComponentId)]
 public class TextureGenerationCollector : MonoBehaviour, INetworkComponent
@@ -18,6 +19,8 @@ public class TextureGenerationCollector : MonoBehaviour, INetworkComponent
     public NetworkId networkId = new NetworkId(97);
     private NetworkContext context;
     public string serverBaseUrl;
+
+    public SelectRay selectRay;
 
     [Serializable]
     private struct Message
@@ -48,7 +51,10 @@ public class TextureGenerationCollector : MonoBehaviour, INetworkComponent
     }
 
     private void SetTexture(Texture2D newTexture) {
-        currentTarget.GetComponent<Renderer>().material.mainTexture = newTexture;
+        // currentTarget.GetComponent<Renderer>().material.mainTexture = newTexture;
+        selectRay.selectedObject.GetComponent<Renderer>().materials[selectRay.selectedSubmeshIndex].mainTexture = newTexture;
+        // Set texture scale to 0.15
+        selectRay.selectedObject.GetComponent<Renderer>().materials[selectRay.selectedSubmeshIndex].mainTextureScale = new Vector2(0.02f, 0.02f);
     }
 
     void LoadPNGFromURL(string url, System.Action<Texture2D> onComplete)
