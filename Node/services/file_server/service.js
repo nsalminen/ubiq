@@ -30,7 +30,11 @@ class FileServer {
     start() {
         this.app.use(this.prefix, express.static(this.directory));
         this.app.listen(this.port, () => {
-            console.log(`File server listening on port ${this.port}!`);
+            console.log(`File server listening on port ${this.port} and serving files from ${this.directory}!`);
         });
     }
 }
+
+module.exports = {
+    FileServer,
+};

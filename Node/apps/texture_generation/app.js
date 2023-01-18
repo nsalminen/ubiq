@@ -1,30 +1,14 @@
-// The LogCollectorService sample creates a programmatic peer that joins a room
-// and records all Experiment Log Events (0x2) it encounters.
-//
-// To achieve this, we first create a NetworkScene (the Peer), and create a
-// connection for it to the server (which is specified here as Nexus). Then we
-// add a RoomClient and LogCollector component(s). These join a room and recieve
-// log messages.
-//
-// The LogCollector uses the Id of the peers to decide where to write the events.
-// It creates new files on demand, and closes them when the corresponding Peer
-// has left the room.
-
-// Import Ubiq types
-const { NetworkScene, RoomClient, LogCollector, UbiqTcpConnection } = require("../../../ubiq");
+const { NetworkScene, RoomClient, LogCollector, UbiqTcpConnection } = require("../../ubiq");
 const fs = require("fs");
 const { TranscriptionService } = require("../../services/speech_to_text/service");
 const { TextureGenerationService } = require("../../services/image_generation/service");
-const express = require("express");
-const app = express();
+const { FileServer } = require("../../services/file_server/service");
 const commandRegex =
     /(?:transform|create|make|set|change|turn)(?: the| an| some)? (?:(?:(.*?) (?:(?:to|into|look like|appear like|seem like|)) (.*)))/i;
 var textureTarget = null;
 
-app.use(express.static("outputs"));
-app.listen(3000, function () {
-    console.log("Image server listening on port 3000!");
-});
+const file_server = new FileServer((directory = "data"));
+file_server.start();
 
 // Configuration
 eventType = 2;

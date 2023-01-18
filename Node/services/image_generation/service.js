@@ -23,7 +23,12 @@ class TextureGenerationService extends EventEmitter {
     }
 
     start(broadcastResults = false) {
-        this.pythonProcess = spawn("python", ["-u", "../texture_generation/text_2_image.py"]);
+        this.pythonProcess = spawn("python", [
+            "-u",
+            "../../services/image_generation/text_2_image.py",
+            "--output_folder",
+            "../../apps/texture_generation/data",
+        ]);
         this.pythonProcess.stdout.on("data", (data) => {
             if (broadcastResults) {
                 var response = data.toString();
@@ -59,7 +64,6 @@ class TextureGenerationService extends EventEmitter {
         this.roomClient.addListener(
             "OnPeerRemoved",
             function () {
-                writer.end();
                 console.log("AudioCollector OnPeerRemoved");
             }.bind(this)
         );
