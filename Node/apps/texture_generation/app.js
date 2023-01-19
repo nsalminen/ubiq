@@ -35,10 +35,12 @@ transcriptionservice.onResponse((data) => {
         console.log(resultMatch);
         if (resultMatch[1]) {
             let commandMatch = commandRegex.exec(resultMatch[1]);
-            if (commandMatch[1] && commandMatch[2]) {
-                console.log(commandMatch[1], commandMatch[2]);
-                textureTarget = commandMatch[1];
-                textureGeneration.execute(commandMatch[2]);
+            if (commandMatch != null) {
+                if (commandMatch[1] && commandMatch[2]) {
+                    console.log(commandMatch[1], commandMatch[2]);
+                    textureTarget = commandMatch[1];
+                    textureGeneration.execute(commandMatch[2]);
+                }
             }
         }
     }
