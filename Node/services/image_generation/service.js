@@ -17,7 +17,6 @@ class TextureGenerationService extends EventEmitter {
         this.context = scene.register(this);
         this.registerRoomClientEvents();
         this.pythonProcess = null;
-        this.resultRegex = /text="([^"]*)"/;
 
         this.start(true);
     }

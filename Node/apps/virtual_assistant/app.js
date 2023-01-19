@@ -15,6 +15,7 @@ const { NetworkScene, RoomClient, LogCollector, UbiqTcpConnection } = require(".
 const fs = require('fs');
 const { TranscriptionService } = require("../../services/speech_to_text/service");
 const { TextGenerationService } = require("../../services/text_generation/service");
+const { response } = require("express");
 
 // Configuration
 eventType = 2;
@@ -30,20 +31,16 @@ scene.addConnection(connection);
 // A RoomClient to join a Room
 const roomclient = new RoomClient(scene);
 // const logcollector = new LogCollector(scene);
-const transcriptionservice = new TranscriptionService(scene);
+const transcriptionservice = new TranscriptionService(scene, broadcastResults = false);
 const textGeneration = new TextGenerationService(scene);
 
-transcriptionservice.start(broadcastResults = true);
-
-transcriptionservice.onResponse((data) => {
+transcriptionservice.onResponse((data, peer) => {
     console.log("Used For Text Generation...");
-     // Here you can do whatever you want with the data
-    if (data.startsWith("RECOGNIZED: ")){
-        let match = transcriptionservice.resultRegex.exec(data);
-        console.log(match);
-        if (match[1]){
-            textGeneration.execute(match[1]);    
-        }
+    // Here you can do whatever you want with the data
+    response = data.toString();
+    if (response.startsWith(">")){
+        response = response.slice(1); // Slice off the leading '>' character
+        textGeneration.execute(response);    
     }
 });
 

@@ -3,7 +3,11 @@ import sys
 import json
 import azure.cognitiveservices.speech as speechsdk
 from azure.cognitiveservices.speech.audio import AudioStreamFormat, AudioConfig
+import argparse
 
+parser = argparse.ArgumentParser()
+parser.add_argument("--peer", type=str, default="00000000-0000-0000-0000-000000000000")
+args = parser.parse_args()
 
 def recognize_from_stdin():
     speech_config = speechsdk.SpeechConfig(
@@ -18,14 +22,14 @@ def recognize_from_stdin():
     speech_recognizer = speechsdk.SpeechRecognizer(
         speech_config=speech_config, audio_config=audio_config
     )
-    print("> Azure Speech client ready to receive chunks")
+    # print("Azure Speech client ready to receive chunks for peer " + args.peer + ".")
     done = False
 
-    def recognizing_cb(evt: speechsdk.SpeechRecognitionEventArgs):
-        print("RECOGNIZING: {}".format(evt))
+    # def recognizing_cb(evt: speechsdk.SpeechRecognitionEventArgs):
+    #     print("RECOGNIZING: {}".format(evt))
 
     def recognized_cb(evt: speechsdk.SpeechRecognitionEventArgs):
-        print("RECOGNIZED: {}".format(evt))
+        print(">{}".format(evt.result.text))
 
     def stop_cb(evt: speechsdk.SessionEventArgs):
         """callback that signals to stop continuous recognition"""
@@ -34,7 +38,7 @@ def recognize_from_stdin():
         done = True
 
     # Connect callbacks to the events fired by the speech recognizer
-    speech_recognizer.recognizing.connect(recognizing_cb)
+    # speech_recognizer.recognizing.connect(recognizing_cb)
     speech_recognizer.recognized.connect(recognized_cb)
     speech_recognizer.session_stopped.connect(stop_cb)
     speech_recognizer.canceled.connect(stop_cb)

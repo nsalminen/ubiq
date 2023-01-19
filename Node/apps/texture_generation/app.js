@@ -26,21 +26,17 @@ const roomclient = new RoomClient(scene);
 const transcriptionservice = new TranscriptionService(scene);
 const textureGeneration = new TextureGenerationService(scene);
 
-transcriptionservice.start((broadcastResults = true));
-
-transcriptionservice.onResponse((data) => {
-    console.log("Used For Texture Generation...");
-    if (data.startsWith("RECOGNIZED: ")) {
-        let resultMatch = transcriptionservice.resultRegex.exec(data);
-        console.log(resultMatch);
-        if (resultMatch[1]) {
-            let commandMatch = commandRegex.exec(resultMatch[1]);
-            if (commandMatch != null) {
-                if (commandMatch[1] && commandMatch[2]) {
-                    console.log(commandMatch[1], commandMatch[2]);
-                    textureTarget = commandMatch[1];
-                    textureGeneration.execute(commandMatch[2]);
-                }
+transcriptionservice.onResponse((data, peer) => {
+    response = data.toString();
+    if (response.startsWith(">")) {
+        response = response.slice(1); // Slice off the leading '>' character
+        
+        let commandMatch = commandRegex.exec(response);
+        if (commandMatch != null) {
+            if (commandMatch[1] && commandMatch[2]) {
+                console.log(commandMatch[1], commandMatch[2]);
+                textureTarget = commandMatch[1];
+                textureGeneration.execute(commandMatch[2]);
             }
         }
     }
