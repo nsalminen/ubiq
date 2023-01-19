@@ -11,10 +11,10 @@
 // has left the room.
 
 // Import Ubiq types
-const { NetworkScene, RoomClient, LogCollector, UbiqTcpConnection } = require("../../../ubiq");
+const { NetworkScene, RoomClient, LogCollector, UbiqTcpConnection } = require("../../ubiq");
 const fs = require('fs');
-const { TranscriptionService } = require("../../../ubiq/transcription");
-const { TextGenerationService } = require("../../../ubiq/textgeneration");
+const { TranscriptionService } = require("../../services/speech_to_text/service");
+const { TextGenerationService } = require("../../services/text_generation/service");
 
 // Configuration
 eventType = 2;
