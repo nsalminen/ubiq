@@ -26,7 +26,7 @@ class TranscriptionService extends EventEmitter {
     }
 
     start(broadcastResults = false) {
-        this.pythonProcess = spawn("python", ["-u", "../../services/speech_to_text/transcribe_azure.py"]);
+        this.pythonProcess = spawn("python", ["-u", __dirname + "\\transcribe_azure.py"]);
         this.pythonProcess.stdout.on("data", (data) => {
             if (broadcastResults) {
                 var response = data.toString();
