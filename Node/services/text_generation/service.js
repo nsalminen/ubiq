@@ -16,13 +16,12 @@ class TextGenerationService extends EventEmitter {
         this.context = scene.register(this);
         this.registerRoomClientEvents();
         this.pythonProcess = null;
-        this.resultRegex = /text="([^"]*)"/;
 
         this.start(true);
     }
 
     start(broadcastResults = false) {
-        this.pythonProcess = spawn("python", ["-u", "../text_generation/text_2_chatgpt.py"]);
+        this.pythonProcess = spawn("python", ["-u", __dirname + "\\text_2_chatgpt.py"]);
         this.pythonProcess.stdout.on("data", (data) => {
             if (broadcastResults) {
                 var response = data.toString();
@@ -62,6 +61,7 @@ class TextGenerationService extends EventEmitter {
 
     execute(msg) {
         //maybe local process message
+        console.log("Until here all's ok...")
         if (this.pythonProcess) {
             this.pythonProcess.stdin.write(msg + "\n");
         }

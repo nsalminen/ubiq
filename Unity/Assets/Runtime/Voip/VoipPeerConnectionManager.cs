@@ -134,6 +134,11 @@ namespace Ubiq.Voip
             defaultAudioSink = this.GetInterface<IAudioSink>();
         }
 
+        public IAudioSource GetAudioSource()
+        {
+            return defaultAudioSource;
+        }
+
         private void sendAudioToServer(uint durationRtpUnits, byte[] sample)
         {
             // Decode the sample from G722 to PCM

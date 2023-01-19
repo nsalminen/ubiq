@@ -17,7 +17,6 @@ class TextureGenerationService extends EventEmitter {
         this.context = scene.register(this);
         this.registerRoomClientEvents();
         this.pythonProcess = null;
-        this.resultRegex = /text="([^"]*)"/;
 
         this.start(true);
     }
@@ -28,6 +27,8 @@ class TextureGenerationService extends EventEmitter {
             "../../services/image_generation/text_2_image.py",
             "--output_folder",
             "../../apps/texture_generation/data",
+            "--prompt_postfix",
+            "', in the style of Yayoi Kusama'"
         ]);
         this.pythonProcess.stdout.on("data", (data) => {
             if (broadcastResults) {

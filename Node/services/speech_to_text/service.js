@@ -13,7 +13,7 @@ const writer = new wav.FileWriter("audio.wav", {
 });
 
 class TranscriptionService extends EventEmitter {
-    constructor(scene) {
+    constructor(scene, broadcastResults = false) {
         super();
         this.objectId = new NetworkId(98);
         this.componentId = 98;
@@ -21,28 +21,42 @@ class TranscriptionService extends EventEmitter {
 
         this.context = scene.register(this);
         this.registerRoomClientEvents();
-        this.pythonProcess = null;
-        this.resultRegex = /text="([^"]*)"/;
+        this.pythonProcesses = [];
+        this.broadcastResults = broadcastResults;
+        this.onResponseCallbacks = [];
     }
 
-    start(broadcastResults = false) {
-        this.pythonProcess = spawn("python", ["-u", "../../services/speech_to_text/transcribe_azure.py"]);
-        this.pythonProcess.stdout.on("data", (data) => {
-            if (broadcastResults) {
+    sendResponse(peer_uuid, data) {
+        for (const peer of this.roomClient.getPeers()) {
+            this.context.send(peer.networkId, this.componentId, {
+                type: "recognizedText",
+                peer: peer_uuid,
+                data: data,
+            });
+        }
+    }
+
+    spawnProcessForPeer(peer) {
+        console.log("Spawning speech-to-text process for peer " + peer);
+        this.pythonProcesses[peer] = spawn("python", [
+            "-u",
+            "../../services/speech_to_text/transcribe_azure.py",
+            "--peer",
+            peer,
+        ]);
+        this.pythonProcesses[peer].stdout.on("data", (data) => {
+            if (this.broadcastResults) {
                 var response = data.toString();
-                if (response.startsWith("RECOGNIZED: ")) {
-                    let match = this.resultRegex.exec(response);
-                    if (match[1]) {
-                        this.sendResponse(match[1]);
-                    }
+                if (response.startsWith(">")) {
+                    response = response.slice(1); // Slice off the leading '>' character
+                    this.sendResponse(peer, response);
                 }
             }
         });
-    }
 
-    sendResponse(data) {
-        for (const peer of this.roomClient.getPeers()) {
-            this.context.send(peer.networkId, this.componentId, { type: "recognizedText", peer: "TODO", data: data });
+        // Register the new peer's process with all existing callbacks
+        for (let i = 0; i < this.onResponseCallbacks.length; i++) {
+            this.pythonProcesses[peer].stdout.on("data", (data) => this.onResponseCallbacks[i](data, peer));
         }
     }
 
@@ -53,26 +67,29 @@ class TranscriptionService extends EventEmitter {
         }
         this.roomClient.addListener(
             "OnPeerAdded",
-            function () {
-                console.log("AudioCollector OnPeerAdded");
+            function (peer) {
+                this.spawnProcessForPeer(peer.uuid);
             }.bind(this)
         );
-
         this.roomClient.addListener(
             "OnPeerRemoved",
-            function () {
+            function (peer) {
                 writer.end();
-                console.log("AudioCollector OnPeerRemoved");
+                console.log("Ending speech-to-text process for peer " + peer.uuid);
+                this.pythonProcesses[peer.uuid].kill();
             }.bind(this)
         );
     }
 
     processMessage(msg) {
         this.audioData = Buffer.concat([this.audioData, msg.message]);
+        // console.log("AudioCollector received " + msg.message.length + " bytes of audio data");
+        while (this.audioData.length >= 1060) {
+            // Slice the first 36 bytes from the audioData buffer (the peer UUID)
+            const peer_uuid = this.audioData.slice(0, 36);
 
-        while (this.audioData.length >= 256) {
-            // Slice the first 256 bytes from the audioData buffer
-            const chunk = this.audioData.slice(0, 256);
+            // Slice the next 1024 bytes from the audioData buffer (the audio chunk)
+            const chunk = this.audioData.slice(36, 1060);
 
             // Write the chunk to the local audio file
             // appendFileSync('audio.g722', chunk);
@@ -80,26 +97,30 @@ class TranscriptionService extends EventEmitter {
             // Write the chunk to the WAV file
             // writer.write(chunk);
 
-            // Remove the chunk from the audioData buffer
-            this.audioData = this.audioData.slice(256);
-            // console.log(JSON.stringify(chunk.toJSON()))
-            // JSON.stringify(bufferOne);
+            // Remove the data from the audioData buffer
+            this.audioData = this.audioData.slice(1060);
+
             // Send data to the child Python process's stdin
-            if (this.pythonProcess) {
-                this.pythonProcess.stdin.write(JSON.stringify(chunk.toJSON()) + "\n");
+            if (this.pythonProcesses[peer_uuid]) {
+                this.pythonProcesses[peer_uuid].stdin.write(JSON.stringify(chunk.toJSON()) + "\n");
+            } else {
+                console.error("No speech-to-text process for peer " + peer_uuid);
             }
         }
     }
 
     onResponse(cb) {
-        if (this.pythonProcess) {
-            this.pythonProcess.stdout.on("data", (data) => cb(data.toString()));
+        for (const peer of this.roomClient.getPeers()) {
+            this.pythonProcesses[peer.uuid].stdout.on("data", (data) => cb(data, peer));
         }
+
+        // Save the callback so that it can be registered with new peers
+        this.onResponseCallbacks.push(cb);
     }
 
     onError(cb) {
-        if (this.pythonProcess) {
-            this.pythonProcess.stderr.on("data", (data) => cb(data));
+        for (const peer of this.roomClient.getPeers()) {
+            this.pythonProcesses[peer.uuid].stdout.on("data", (data) => cb(data, peer));
         }
     }
 }

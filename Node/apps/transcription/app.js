@@ -16,9 +16,7 @@ scene.addConnection(connection);
 // A RoomClient to join a Room
 const roomclient = new RoomClient(scene);
 // const logcollector = new LogCollector(scene);
-const transcriptionservice = new TranscriptionService(scene);
-
-transcriptionservice.start((broadcastResults = true));
+const transcriptionservice = new TranscriptionService(scene, broadcastResults = true);
 
 transcriptionservice.onResponse((data) => {
     console.log(data.toString());

@@ -35,6 +35,11 @@ namespace Ubiq.Voip
         public void ExternalAudioSourceRawSample(AudioSamplingRatesEnum samplingRate, uint durationMilliseconds, short[] sample) => OnAudioSourceRawSample.Invoke(samplingRate,durationMilliseconds,sample);
         // IAudioSource implementation ends
 
+        public AudioClip GetAudioClip() 
+        {
+            return microphoneListener.audioClip;
+        }
+
         private class MicrophoneListener
         {
             public string deviceName { get; private set; }
@@ -142,6 +147,8 @@ namespace Ubiq.Voip
         private Queue<Task> mainThreadTasks = new Queue<Task>();
         private TaskCompletionSource<bool> allTaskTcs = new TaskCompletionSource<bool>();
         private readonly object taskLock = new object();
+
+
 
 #if UNITY_ANDROID && !UNITY_EDITOR
         private bool microphoneAuthorized = false;
