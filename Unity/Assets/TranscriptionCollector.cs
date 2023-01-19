@@ -39,6 +39,7 @@ public class TranscriptionCollector : MonoBehaviour, INetworkComponent
 
     public void ProcessMessage(ReferenceCountedSceneGraphMessage data)
     {
-        Debug.Log(data.FromJson<Message>().data);
+        Message message = data.FromJson<Message>();
+        Debug.Log(message.peer + " " + message.data);
     }
 }

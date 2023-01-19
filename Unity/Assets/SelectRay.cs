@@ -26,6 +26,7 @@ namespace Ubiq.XR
 
         public GameObject selectedObject;
         public int selectedSubmeshIndex;
+        public string selectedMaterialName;
 
         private new LineRenderer renderer;
 
@@ -145,6 +146,8 @@ namespace Ubiq.XR
                             {
                                 Debug.Log("Hit submesh " + i);
                                 selectedObject = raycasthitinfo.collider.gameObject;
+                                selectedMaterialName = selectedObject.GetComponent<Renderer>().materials[i].name;
+                                Debug.Log("Hit material " + selectedMaterialName);
                                 selectedSubmeshIndex = i;
                                 // submeshRenderer = meshCollider.gameObject.GetComponent<Renderer>().materials;
                                 // submeshRenderer[i].color = Color.red;

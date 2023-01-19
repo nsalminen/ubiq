@@ -32,13 +32,23 @@ public class TextureGenerationCollector : MonoBehaviour, INetworkComponent
     }
 
     [Serializable]
+    public struct MaterialKeywords {
+        public Material material;
+        public List<string> keywords;
+    }
+    public MaterialKeywords[] materialKeywords;
+
+    [Serializable]
     public struct ObjectTargetKeywords {
         public GameObject targetObject;
         public int targetSubmeshIndex;
+        public string targetMaterialName;
         public string[] targetKeywords;
     }
     public ObjectTargetKeywords[] targets;
-    private GameObject currentTarget;
+    private List<Tuple<GameObject, int>> currentTargets;
+    private int currentSubmeshIndex;
+    private string currentTargetMaterialName;
 
     // Start is called before the first frame update
     void Start()
@@ -53,17 +63,11 @@ public class TextureGenerationCollector : MonoBehaviour, INetworkComponent
     }
 
     private void SetTexture(Texture2D newTexture) {
-        // currentTarget.GetComponent<Renderer>().material.mainTexture = newTexture;
-        // If paintAll, paint the sharedMaterial instead of material
-        if (paintAll) {
-            currentTarget.GetComponent<Renderer>().sharedMaterials[selectRay.selectedSubmeshIndex].mainTexture = newTexture;
-            currentTarget.GetComponent<Renderer>().sharedMaterials[selectRay.selectedSubmeshIndex].mainTextureScale = new Vector2(0.02f, 0.02f);
-        } else {
-            currentTarget.GetComponent<Renderer>().materials[selectRay.selectedSubmeshIndex].mainTexture = newTexture;
-            currentTarget.GetComponent<Renderer>().materials[selectRay.selectedSubmeshIndex].mainTextureScale = new Vector2(0.02f, 0.02f);
+        // Set the texture of the submeshes of the current targets
+        foreach (Tuple<GameObject, int> target in currentTargets) {
+            target.Item1.GetComponent<Renderer>().materials[target.Item2].mainTexture = newTexture;
+            target.Item1.GetComponent<Renderer>().materials[target.Item2].mainTextureScale = new Vector2(0.02f, 0.02f);
         }
-        // selectRay.selectedObject.GetComponent<Renderer>().materials[selectRay.selectedSubmeshIndex].mainTexture = newTexture;
-        // Set texture scale to 0.15
     }
 
     void LoadPNGFromURL(string url, System.Action<Texture2D> onComplete)
@@ -83,35 +87,48 @@ public class TextureGenerationCollector : MonoBehaviour, INetworkComponent
             }
         };
     }
-    
-    public void ProcessMessage(ReferenceCountedSceneGraphMessage data)
-    {
-        Message message = data.FromJson<Message>();
-        if (message.target.ToLower() == "this") {
-            currentTarget = selectRay.selectedObject;
-            paintAll = false;
-        } else if (message.target.ToLower() == "all of these") {
-            currentTarget = selectRay.selectedObject;
-            paintAll = true;
-        } else {
-            if (message.target.ToLower().StartsWith("all")) {
-                paintAll = true;
-                message.target = message.target.Substring(3); // Remove "all" from the message.target
-                Debug.Log("Painting all" + message.target);
-            } else {
-                paintAll = false;
-            }
-            
-            for (int i = 0; i < targets.Length; i++) {
-                for (int j = 0; j < targets[i].targetKeywords.Length; j++) {
-                    if (message.target.Contains(targets[i].targetKeywords[j])) {
-                        currentTarget = targets[i].targetObject;
+
+    // Find all submeshes of GameObjects in the scene with the given material name. Return a list of tuples of the GameObject and submesh index.
+    private List<Tuple<GameObject, int>> FindTargets(string materialName) {
+        List<Tuple<GameObject, int>> targets = new List<Tuple<GameObject, int>>();
+        GameObject[] allObjects = UnityEngine.Object.FindObjectsOfType<GameObject>();
+        foreach (GameObject obj in allObjects) {
+            if (obj.GetComponent<Renderer>() != null) {
+                Material[] materials = obj.GetComponent<Renderer>().materials;
+                for (int i = 0; i < materials.Length; i++) {
+                    if (materials[i].name == materialName) {
+                        targets.Add(new Tuple<GameObject, int>(obj, i));
                     }
                 }
             }
         }
+        return targets;
+    }
+    
+    public void ProcessMessage(ReferenceCountedSceneGraphMessage data)
+    {
+        Message message = data.FromJson<Message>();
+        
+        // Search through MaterialKeywords to find the material with the given keyword.
+        Material targetMaterial = null;
+        foreach (MaterialKeywords mk in materialKeywords) {
+            foreach (string keyword in mk.keywords) {
+                if (keyword.StartsWith(message.target)) {
+                    targetMaterial = mk.material;
+                    break;
+                }
+            }
+        }
 
-        if (currentTarget != null) {
+        if (targetMaterial == null) {
+            Debug.Log("No material found for " + message.target);
+            return;
+        }
+
+        currentTargets = FindTargets(targetMaterial.name + " (Instance)"); // Add " (Instance)" to the material name to find instances of the material.
+
+        // If targets are found, load the texture from the server and set it on the targets.
+        if (currentTargets.Count > 0) {
             string fileName = message.data.ToString().Trim('\r', '\n');
             LoadPNGFromURL(serverBaseUrl + fileName, SetTexture);
         } else {
