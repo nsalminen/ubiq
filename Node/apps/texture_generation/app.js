@@ -30,12 +30,19 @@ transcriptionservice.onResponse((data, peer) => {
     response = data.toString();
     if (response.startsWith(">")) {
         response = response.slice(1); // Slice off the leading '>' character
-        
+
         let commandMatch = commandRegex.exec(response);
         if (commandMatch != null) {
             if (commandMatch[1] && commandMatch[2]) {
                 console.log(commandMatch[1], commandMatch[2]);
                 textureTarget = commandMatch[1];
+                for (const peer of textureGeneration.roomClient.getPeers()) {
+                    textureGeneration.context.send(peer.networkId, textureGeneration.componentId, {
+                        type: "GenerationStarted",
+                        target: textureTarget,
+                        data: "",
+                    });
+                }
                 textureGeneration.execute(commandMatch[2]);
             }
         }
