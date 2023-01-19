@@ -21,7 +21,7 @@ class TextGenerationService extends EventEmitter {
     }
 
     start(broadcastResults = false) {
-        this.pythonProcess = spawn("python", ["-u", "../../services/text_generation/text_2_chatgpt.py"]);
+        this.pythonProcess = spawn("python", ["-u", __dirname + "\\text_2_chatgpt.py"]);
         this.pythonProcess.stdout.on("data", (data) => {
             if (broadcastResults) {
                 var response = data.toString();
@@ -61,6 +61,7 @@ class TextGenerationService extends EventEmitter {
 
     execute(msg) {
         //maybe local process message
+        console.log("Until here all's ok...")
         if (this.pythonProcess) {
             this.pythonProcess.stdin.write(msg + "\n");
         }
