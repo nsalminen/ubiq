@@ -31,6 +31,8 @@ public class TextureGenerationCollector : MonoBehaviour, INetworkComponent
         public string data;
     }
 
+    public Texture2D tempTexture;
+
     [Serializable]
     public struct MaterialKeywords {
         public Material material;
@@ -104,11 +106,8 @@ public class TextureGenerationCollector : MonoBehaviour, INetworkComponent
         }
         return targets;
     }
-    
-    public void ProcessMessage(ReferenceCountedSceneGraphMessage data)
-    {
-        Message message = data.FromJson<Message>();
-        
+
+    private void processTextureMessage(Message message) {
         // Search through MaterialKeywords to find the material with the given keyword.
         Material targetMaterial = null;
         foreach (MaterialKeywords mk in materialKeywords) {
@@ -127,12 +126,31 @@ public class TextureGenerationCollector : MonoBehaviour, INetworkComponent
 
         currentTargets = FindTargets(targetMaterial.name + " (Instance)"); // Add " (Instance)" to the material name to find instances of the material.
 
-        // If targets are found, load the texture from the server and set it on the targets.
-        if (currentTargets.Count > 0) {
-            string fileName = message.data.ToString().Trim('\r', '\n');
-            LoadPNGFromURL(serverBaseUrl + fileName, SetTexture);
-        } else {
-            Debug.Log("No target found for " + message.target);
+        if (message.type == "TextureGeneration") {
+            // If targets are found, load the texture from the server and set it on the targets.
+            if (currentTargets.Count > 0) {
+                string fileName = message.data.ToString().Trim('\r', '\n');
+                LoadPNGFromURL(serverBaseUrl + fileName, SetTexture);
+            } else {
+                Debug.Log("No target found for " + message.target);
+            }
+        } else if (message.type == "GenerationStarted") {
+            Debug.Log("Generation started of " + message.target);
+            SetTexture(tempTexture);
         }
+        // If targets are found, load the texture from the server and set it on the targets.
+        // if (currentTargets.Count > 0) {
+        //     string fileName = message.data.ToString().Trim('\r', '\n');
+        //     LoadPNGFromURL(serverBaseUrl + fileName, SetTexture);
+        // } else {
+        //     Debug.Log("No target found for " + message.target);
+        // }
+    }
+    
+    public void ProcessMessage(ReferenceCountedSceneGraphMessage data)
+    {
+        Message message = data.FromJson<Message>();
+        Debug.Log("Message received.");
+        processTextureMessage(message);
     }
 }
