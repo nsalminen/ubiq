@@ -84,6 +84,7 @@ class TranscriptionService extends EventEmitter {
     processMessage(msg) {
         this.audioData = Buffer.concat([this.audioData, msg.message]);
         // console.log("AudioCollector received " + msg.message.length + " bytes of audio data");
+        // console.log("Length of audioData buffer: " + this.audioData.length);
         while (this.audioData.length >= 1060) {
             // Slice the first 36 bytes from the audioData buffer (the peer UUID)
             const peer_uuid = this.audioData.slice(0, 36);

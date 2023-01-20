@@ -18,6 +18,9 @@ class TextureGenerationService extends EventEmitter {
         this.registerRoomClientEvents();
         this.pythonProcess = null;
 
+        // Dictionary of peer uuids and their last message including time
+        this.lastPeerSelection = {};
+
         this.start(true);
     }
 
