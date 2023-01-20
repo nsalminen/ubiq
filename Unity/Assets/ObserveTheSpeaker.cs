@@ -62,6 +62,7 @@ public class ObserveTheSpeaker : MonoBehaviour
             {
                 // Get the direction of the sound
                 soundDirection = localSpeaker.transform.position - transform.position;
+                soundDirection = new Vector3(soundDirection.x, localSpeaker.transform.position.y, soundDirection.z);
 
                 // Rotate the head towards the sound
                 transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(soundDirection), speed * Time.deltaTime);
