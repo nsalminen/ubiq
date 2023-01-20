@@ -117,6 +117,8 @@ namespace Ubiq.Voip
 
         private LogEmitter logger;
 
+        public bool triggerSendingAudioToServer = true;
+
         private void Awake()
         {
             peerConnectionSource = new RTCPeerConnectionSource();
@@ -141,23 +143,26 @@ namespace Ubiq.Voip
 
         private void sendAudioToServer(uint durationRtpUnits, byte[] sample)
         {
-            // Decode the sample from G722 to PCM
-            short[] decodedSampleShort = decoder.Decode(sample);
-            byte[] decodedSampleByte = new byte[decodedSampleShort.Length * sizeof(short)];
-            Buffer.BlockCopy(decodedSampleShort, 0, decodedSampleByte, 0, decodedSampleByte.Length);
+            if (triggerSendingAudioToServer) {
+                Debug.Log("Sending audio to server");
+                // Decode the sample from G722 to PCM
+                short[] decodedSampleShort = decoder.Decode(sample);
+                byte[] decodedSampleByte = new byte[decodedSampleShort.Length * sizeof(short)];
+                Buffer.BlockCopy(decodedSampleShort, 0, decodedSampleByte, 0, decodedSampleByte.Length);
 
-            // Get the client UUID
-            byte[] clientUUID = System.Text.Encoding.UTF8.GetBytes(client.Me.UUID);
+                // Get the client UUID
+                byte[] clientUUID = System.Text.Encoding.UTF8.GetBytes(client.Me.UUID);
 
-            // Create a message that fits the client UUID and the decoded sample
-            var message = ReferenceCountedSceneGraphMessage.Rent(decodedSampleByte.Length + clientUUID.Length);
+                // Create a message that fits the client UUID and the decoded sample
+                var message = ReferenceCountedSceneGraphMessage.Rent(decodedSampleByte.Length + clientUUID.Length);
 
-            // Copy the client UUID and the decoded sample into the message
-            clientUUID.CopyTo(new Span<byte>(message.bytes, message.start, clientUUID.Length));
-            decodedSampleByte.CopyTo(new Span<byte>(message.bytes, message.start + clientUUID.Length, decodedSampleByte.Length));
+                // Copy the client UUID and the decoded sample into the message
+                clientUUID.CopyTo(new Span<byte>(message.bytes, message.start, clientUUID.Length));
+                decodedSampleByte.CopyTo(new Span<byte>(message.bytes, message.start + clientUUID.Length, decodedSampleByte.Length));
 
-            // Send the message to the server with a fixed network ID
-            context.Send(networkId, 98, message);
+                // Send the message to the server with a fixed network ID
+                context.Send(networkId, 98, message);
+            }
         }
 
         private void Start()

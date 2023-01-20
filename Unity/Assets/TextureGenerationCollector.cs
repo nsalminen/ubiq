@@ -18,8 +18,8 @@ public class TextureGenerationCollector : MonoBehaviour, INetworkComponent
     public const ushort ComponentId = 97;
     public NetworkId networkId = new NetworkId(97);
     private NetworkContext context;
+    private RoomClient client;
     public string serverBaseUrl;
-
     public SelectRay selectRay;
     private bool paintAll = false;
 
@@ -56,6 +56,7 @@ public class TextureGenerationCollector : MonoBehaviour, INetworkComponent
     void Start()
     {
         context = NetworkScene.Register(this);
+        client = GetComponentInParent<RoomClient>();
     }
 
     // Update is called once per frame
@@ -108,23 +109,36 @@ public class TextureGenerationCollector : MonoBehaviour, INetworkComponent
     }
 
     private void processTextureMessage(Message message) {
-        // Search through MaterialKeywords to find the material with the given keyword.
         Material targetMaterial = null;
-        foreach (MaterialKeywords mk in materialKeywords) {
-            foreach (string keyword in mk.keywords) {
-                if (keyword.StartsWith(message.target)) {
-                    targetMaterial = mk.material;
-                    break;
+        string targetMaterialName = null;
+
+        // If message.target contains a colon (:) then our target is a specific object and material, divided by a colon.
+        if (message.target.Contains(":")) {
+            string[] targetParts = message.target.Split(':');
+            if (targetParts.Length != 2) {
+                Debug.Log("Invalid target: " + message.target);
+                return;
+            }
+            targetMaterialName = targetParts[1];
+        } else {
+            // Search through MaterialKeywords to find the material with the given keyword.
+            foreach (MaterialKeywords mk in materialKeywords) {
+                foreach (string keyword in mk.keywords) {
+                    if (keyword.StartsWith(message.target)) {
+                        targetMaterial = mk.material;
+                        targetMaterialName = mk.material.name + " (Instance)";  // Add " (Instance)" to the material name to find instances of the material.
+                        break;
+                    }
                 }
+            }
+
+            if (targetMaterial == null) {
+                Debug.Log("No material found for " + message.target);
+                return;
             }
         }
 
-        if (targetMaterial == null) {
-            Debug.Log("No material found for " + message.target);
-            return;
-        }
-
-        currentTargets = FindTargets(targetMaterial.name + " (Instance)"); // Add " (Instance)" to the material name to find instances of the material.
+        currentTargets = FindTargets(targetMaterialName);
 
         if (message.type == "TextureGeneration") {
             // If targets are found, load the texture from the server and set it on the targets.
@@ -150,7 +164,6 @@ public class TextureGenerationCollector : MonoBehaviour, INetworkComponent
     public void ProcessMessage(ReferenceCountedSceneGraphMessage data)
     {
         Message message = data.FromJson<Message>();
-        Debug.Log("Message received.");
         processTextureMessage(message);
     }
 }

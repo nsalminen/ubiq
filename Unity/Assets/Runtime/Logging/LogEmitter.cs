@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -314,6 +314,13 @@ namespace Ubiq.Logging
     public class InfoLogEmitter : LogEmitter
     {
         public InfoLogEmitter(MonoBehaviour component) : base(EventType.Info, component)
+        {
+        }
+    }
+
+    public class ApplicationLogEmitter : LogEmitter
+    {
+        public ApplicationLogEmitter(MonoBehaviour component) : base(EventType.Application, component)
         {
         }
     }

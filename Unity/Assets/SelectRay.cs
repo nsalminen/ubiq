@@ -4,6 +4,10 @@ using System.Collections;
 using System;
 using System.Linq;
 using Ubiq.XR;
+using Ubiq.Networking;
+using Ubiq.Logging;
+using Ubiq.Voip;
+using UnityEngine;
 
 namespace Ubiq.XR
 {
@@ -15,6 +19,7 @@ namespace Ubiq.XR
         { }
 
         public TeleportEvent OnTeleport;
+        private LogEmitter SelectionLogger;
 
         [HideInInspector]
         public Vector3 teleportLocation;
@@ -27,6 +32,14 @@ namespace Ubiq.XR
         public GameObject selectedObject;
         public int selectedSubmeshIndex;
         public string selectedMaterialName;
+        private string lastSelectedObjectMaterialString;
+
+        private HandController handController;
+        
+        public TextureGenerationCollector textureGenerationCollector;
+        public VoipPeerConnectionManager voipPeerConnectionManager;
+
+        private bool desktopMode = false;
 
         private new LineRenderer renderer;
 
@@ -54,7 +67,21 @@ namespace Ubiq.XR
             foreach (IPrimaryButtonProvider item in GetComponentsInParent<MonoBehaviour>().Where(c => c is IPrimaryButtonProvider))
             {
                 item.PrimaryButtonPress.AddListener(UpdateTeleport);
+                item.PrimaryButtonPress.AddListener(listenForCommand);
             }
+
+            // Get HandController in parent
+            handController = GetComponentsInParent<MonoBehaviour>().Where(c => c is HandController).FirstOrDefault() as HandController;
+            handController.GripPress.AddListener(listenForCommand);
+
+            SelectionLogger = new ApplicationLogEmitter(this);
+
+            desktopMode = Application.platform == RuntimePlatform.WindowsEditor || Application.platform == RuntimePlatform.WindowsPlayer || Application.platform == RuntimePlatform.OSXEditor || Application.platform == RuntimePlatform.OSXPlayer;
+        }
+
+        public void listenForCommand(bool listen)
+        {
+            voipPeerConnectionManager.triggerSendingAudioToServer = listen;
         }
 
         public void UpdateTeleport(bool teleporterActivation)
@@ -84,6 +111,21 @@ namespace Ubiq.XR
             else
             {
                 renderer.enabled = false;
+            }
+
+            // Add a listener for space bar if deployed to mac or windows or when viewed in the editor
+            if (desktopMode)
+            {
+                // Check for key down event for space bar
+                if (Input.GetKeyDown(KeyCode.Space))
+                {
+                    listenForCommand(true);
+                }
+                else if (Input.GetKeyUp(KeyCode.Space))
+                {
+                    listenForCommand(false);
+                }
+                
             }
         }
 
@@ -122,10 +164,17 @@ namespace Ubiq.XR
                 renderer.sharedMaterial.color = validColour;
             }
 
-            PrintSubmeshName(raycasthitinfo);
+            string currentObjectMaterialString = GetSubmeshName(raycasthitinfo);
+            if (currentObjectMaterialString != "" && currentObjectMaterialString != lastSelectedObjectMaterialString)
+            {
+                // textureGenerationCollector.sendSelectedObjectMessage(currentObjectMaterialString);
+
+                SelectionLogger.Log(currentObjectMaterialString);
+                lastSelectedObjectMaterialString = currentObjectMaterialString;
+            }
         }
 
-        private void PrintSubmeshName(RaycastHit raycasthitinfo)
+        private string GetSubmeshName(RaycastHit raycasthitinfo)
         {
             if (raycasthitinfo.collider != null)
             {
@@ -145,18 +194,19 @@ namespace Ubiq.XR
                                 indices[j + 2] == raycasthitinfo.triangleIndex)
                             {
                                 Debug.Log("Hit submesh " + i);
-                                selectedObject = raycasthitinfo.collider.gameObject;
-                                selectedMaterialName = selectedObject.GetComponent<Renderer>().materials[i].name;
-                                Debug.Log("Hit material " + selectedMaterialName);
-                                selectedSubmeshIndex = i;
+                                string currentObjectName = raycasthitinfo.collider.gameObject.name;
+                                string currentMaterialName = raycasthitinfo.collider.gameObject.GetComponent<Renderer>().materials[i].name;
+                                Debug.Log("Hit material " + currentMaterialName);
+                                // selectedSubmeshIndex = i;
                                 // submeshRenderer = meshCollider.gameObject.GetComponent<Renderer>().materials;
                                 // submeshRenderer[i].color = Color.red;
-                                break;
+                                return currentObjectName + ":" + currentMaterialName;
                             }
                         }
                     }
                 }
             }
+            return "";
         }
     }
 }
