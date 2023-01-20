@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -245,7 +245,9 @@ namespace Ubiq.Logging
         protected virtual void WriteHeader(ref JsonWriter writer)
         {
             writer.Write("ticks", DateTime.Now.Ticks);
-            writer.Write("peer", collector.roomClient.Me.UUID);
+            if (collector != null && collector.roomClient != null && collector.roomClient.Me != null) {
+                writer.Write("peer", collector.roomClient.Me.UUID);
+            }
         }
     }
 
