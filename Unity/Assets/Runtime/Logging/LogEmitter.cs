@@ -245,7 +245,9 @@ namespace Ubiq.Logging
         protected virtual void WriteHeader(ref JsonWriter writer)
         {
             writer.Write("ticks", DateTime.Now.Ticks);
-            writer.Write("peer", collector.roomClient.Me.UUID);
+            if (collector != null && collector.roomClient != null && collector.roomClient.Me != null) {
+                writer.Write("peer", collector.roomClient.Me.UUID);
+            }
         }
     }
 
@@ -312,6 +314,13 @@ namespace Ubiq.Logging
     public class InfoLogEmitter : LogEmitter
     {
         public InfoLogEmitter(MonoBehaviour component) : base(EventType.Info, component)
+        {
+        }
+    }
+
+    public class ApplicationLogEmitter : LogEmitter
+    {
+        public ApplicationLogEmitter(MonoBehaviour component) : base(EventType.Application, component)
         {
         }
     }
