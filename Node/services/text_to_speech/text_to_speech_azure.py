@@ -7,7 +7,7 @@ speech_config = speechsdk.SpeechConfig(subscription=os.environ.get('SPEECH_KEY')
 # Set the output format. The full list of supported format can be found here: https://docs.microsoft.com/en-us/azure/cognitive-services/speech-service/rest-text-to-speech#output-format. The default format is Riff16Khz16BitMonoPcm.
 speech_config.set_speech_synthesis_output_format(speechsdk.SpeechSynthesisOutputFormat.Raw16Khz16BitMonoPcm)
 
-speech_config.speech_synthesis_voice_name='en-US-JennyNeural'
+speech_config.speech_synthesis_voice_name='en-US-GuyNeural'
 
 speech_synthesizer = speechsdk.SpeechSynthesizer(speech_config=speech_config, audio_config=None)
 # result = speech_synthesizer.speak_text_async("I'm excited to try text-to-speech").get()

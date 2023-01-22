@@ -8,7 +8,7 @@ const spawn = require("child_process").spawn;
 const { LogCollectorMessage } = require("../../ubiq/logcollector");
 
 class TextToSpeechService extends EventEmitter {
-    constructor(scene) {
+    constructor(scene, broadcastResults = false) {
         super();
         this.objectId = new NetworkId(95);
         this.componentId = 95;
@@ -21,33 +21,22 @@ class TextToSpeechService extends EventEmitter {
         // Dictionary of peer uuids and their last message including time
         this.lastPeerSelection = {};
 
-        this.start(false);
+        this.start();
     }
 
-    start(broadcastResults = false) {
+    start() {
         this.pythonProcess = spawn("python", [
             "-u",
             "../../services/text_to_speech/text_to_speech_azure.py"
         ]);
         this.pythonProcess.stdout.on("data", (data) => {
-            // console.log("Message from python:");
-            // console.log("data: " + data.toString());
-            this.audioData = Buffer.concat([this.audioData, data]);
-            this.sendAudioData();
-            // for (const peer of this.roomClient.getPeers()) {
-            //     this.context.send(peer.networkId, this.componentId, this.audioData);
-            // }
             if (broadcastResults) {
-                var response = data.toString();
-                if (response.split(".").pop() == "png") {
-                    this.sendResponse(response);
-                }
+                this.audioData = Buffer.concat([this.audioData, data]);
+                this.sendAudioData();
             }
         });
-        // Wait 2 seconds before sending the first message
-        setTimeout(() => this.sendHello(), 1000);
+        // Wait 1 second before sending the first test message
         // setTimeout(() => this.sendHello(), 1000);
-        // setTimeout(() => this.sendHello(), 100);
     }
 
     sendAudioData() {
@@ -55,14 +44,14 @@ class TextToSpeechService extends EventEmitter {
         while (this.audioData.length > 0) {
             console.log("Sending audio data to peers. Audio data length: " + this.audioData.length + " bytes");
             for (const peer of this.roomClient.getPeers()) {
-                this.context.send(peer.networkId, this.componentId, this.audioData.slice(0, 16000));
-                this.audioData = this.audioData.slice(16000);
+                this.context.send(peer.networkId, this.componentId, this.audioData.slice(0, 32000));
+                this.audioData = this.audioData.slice(32000);
             }
         }
     }
     
     sendHello() {
-        this.pythonProcess.stdin.write("This is a test.\n");
+        this.pythonProcess.stdin.write("As I am just a language model, I do not have personal experiences or opinions on how the pandemic was handled, but I can provide information from various sources. It's widely acknowledged that the pandemic has had severe impact on economies and societies around the world, and the response to it will continue to be evaluated and studied in the future.\n");
     }
 
     sendResponse(data) {

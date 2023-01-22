@@ -8,7 +8,7 @@ const spawn = require("child_process").spawn;
 const { LogCollectorMessage } = require("../../ubiq/logcollector");
 
 class TextureGenerationService extends EventEmitter {
-    constructor(scene) {
+    constructor(scene, broadcastResults = false) {
         super();
         this.objectId = new NetworkId(97);
         this.componentId = 97;
@@ -20,11 +20,12 @@ class TextureGenerationService extends EventEmitter {
 
         // Dictionary of peer uuids and their last message including time
         this.lastPeerSelection = {};
+        this.broadcastResults = broadcastResults;
 
-        this.start(true);
+        this.start();
     }
 
-    start(broadcastResults = false) {
+    start() {
         this.pythonProcess = spawn("python", [
             "-u",
             "../../services/image_generation/text_2_image.py",
@@ -34,7 +35,7 @@ class TextureGenerationService extends EventEmitter {
             "', in the style of Yayoi Kusama'"
         ]);
         this.pythonProcess.stdout.on("data", (data) => {
-            if (broadcastResults) {
+            if (this.broadcastResults) {
                 var response = data.toString();
                 if (response.split(".").pop() == "png") {
                     this.sendResponse(response);

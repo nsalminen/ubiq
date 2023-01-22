@@ -1,21 +1,8 @@
-// The LogCollectorService sample creates a programmatic peer that joins a room 
-// and records all Experiment Log Events (0x2) it encounters.
-//
-// To achieve this, we first create a NetworkScene (the Peer), and create a 
-// connection for it to the server (which is specified here as Nexus). Then we 
-// add a RoomClient and LogCollector component(s). These join a room and recieve 
-// log messages.
-// 
-// The LogCollector uses the Id of the peers to decide where to write the events. 
-// It creates new files on demand, and closes them when the corresponding Peer 
-// has left the room.
-
-// Import Ubiq types
 const { NetworkScene, RoomClient, LogCollector, UbiqTcpConnection } = require("../../ubiq");
-const fs = require('fs');
+const fs = require("fs");
+const { TextToSpeechService } = require("../../services/text_to_speech/service");
 const { TranscriptionService } = require("../../services/speech_to_text/service");
 const { TextGenerationService } = require("../../services/text_generation/service");
-const { response } = require("express");
 
 // Configuration
 eventType = 2;
@@ -30,79 +17,37 @@ scene.addConnection(connection);
 
 // A RoomClient to join a Room
 const roomclient = new RoomClient(scene);
-// const logcollector = new LogCollector(scene);
 const transcriptionservice = new TranscriptionService(scene, broadcastResults = false);
+const texttospeechservice = new TextToSpeechService(scene, broadcastResults = true);
 const textGeneration = new TextGenerationService(scene);
 
+textGeneration.onResponse((data) => {
+    var response = data.toString();
+    console.log("Text Generation Response: " + response);
+    if (response.startsWith(">")){
+        // Slice off the leading '>' character
+        response = response.slice(1);
+        // If the response is not an empty string and does not contain only whitespace
+        if (response.trim()){
+            // This library we use does not return valid JSON. Thereforem, get the answer through regex, by finding the text between {'answer':  and , 'messageId'
+            var answer = response.match(/{'answer': (.*?), 'messageId'/)[1];
+            // Remove the quotes around the answer by slicing off the first and last character
+            answer = answer.slice(1, -1).replace(/\\n/g, "");
+            console.log("Received " + answer + ", sending to TTS...");
+            texttospeechservice.execute(answer);
+        }
+    }
+});
+
 transcriptionservice.onResponse((data, peer) => {
-    console.log("Used For Text Generation...");
-    // Here you can do whatever you want with the data
-    response = data.toString();
+    var response = data.toString();
     if (response.startsWith(">")){
         response = response.slice(1); // Slice off the leading '>' character
-        textGeneration.execute(response);    
+        console.log(response);
+        if (response.trim()){
+            textGeneration.execute(response);
+        }
     }
 });
-
-transcriptionservice.onError((err) => {
-    console.log(err.toString());
-});
-
-textGeneration.onResponse((data) => {
-    //console.log(data.toString()); // Here you can do whatever you want with the data
-if (data.startsWith("{RESPONSE}:")){
-        let match = transcriptionservice.resultRegex.exec(data);
-        for(const peer of textGeneration.roomClient.getPeers()){
-            textGeneration.context.send(peer.networkId, textGeneration.componentId, {type: "text generated", peer: "TODO", data: match});
-        };
-    }
-});
-
-textGeneration.onError((err) => {
-    console.log(err.toString());
-});
-// // A list of open files to write events for particular peers into (we can close these when the peers leave the room)
-// const files = {};
-
-// function writeEventToPeerFile(peer, message){
-//     if(!files.hasOwnProperty(peer)){
-//         files[peer] = fs.createWriteStream(`logs/active/${peer}.log.json`,{
-//             flags: "a"
-//         });
-//         console.log("Create file for peer " + peer);
-//     }
-//     files[peer].write(JSON.stringify(message) + "\n");
-// }
-
-// function closePeerFile(peer){
-//     if(files.hasOwnProperty(peer)){
-//         delete files[peer];
-//         fs.rename(`logs/active/${peer}.log.json`, `logs/archive/${peer}.log.json`, function(err) {
-//             if ( err ) console.log('ERROR: ' + err);
-//         });
-//     }
-// }
-
-// roomclient.addListener("OnJoinedRoom", room => {
-//     console.log(room.joincode);
-// });
-
-// roomclient.addListener("OnPeerRemoved", peer =>{
-//     closePeerFile(peer.uuid);
-// });
-
-// // Register for log events from the log collector.
-// logcollector.addListener("OnLogMessage", (type,message) => {
-//     if(type == eventType){ // Experiment
-//         peer = message.peer; // All log messages include the emitting peer
-//         writeEventToPeerFile(peer, message);
-//     }
-// });
-
-// Calling startCollection()/lockCollection() will start streaming from the LogManagers at existing and
-// and new Peers. Call this before joining a new room.
-// lockCollection() is like startCollection(), but the Collector will automatically maintain its status
-// as the primary collector for as long as it runs.
-// logcollector.lockCollection();
 
 roomclient.join(roomGuid); // Join by UUID. Use an online generator to create a new one for your experiment.

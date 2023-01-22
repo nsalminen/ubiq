@@ -53,7 +53,6 @@ class TextGenerationService extends EventEmitter {
         this.roomClient.addListener(
             "OnPeerRemoved",
             function () {
-                writer.end();
                 console.log("AudioCollector OnPeerRemoved");
             }.bind(this)
         );
