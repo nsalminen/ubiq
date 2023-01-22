@@ -58,7 +58,7 @@ public class ObserveTheSpeaker : MonoBehaviour
             float loudness = GetLoudnessFromAudioClip(Microphone.GetPosition(microphoneName), microphoneClip);
             
             //Debug.Log(loudness);
-            if(loudness > 0.15f) 
+            if(loudness > 0.05f) 
             {
                 // Get the direction of the sound
                 soundDirection = localSpeaker.transform.position - transform.position;

@@ -39,8 +39,6 @@ namespace Ubiq.XR
         public TextureGenerationCollector textureGenerationCollector;
         public VoipPeerConnectionManager voipPeerConnectionManager;
 
-        private bool desktopMode = false;
-
         private new LineRenderer renderer;
 
         private readonly float range = 8f;
@@ -75,8 +73,6 @@ namespace Ubiq.XR
             handController.GripPress.AddListener(listenForCommand);
 
             SelectionLogger = new ApplicationLogEmitter(this);
-
-            desktopMode = Application.platform == RuntimePlatform.WindowsEditor || Application.platform == RuntimePlatform.WindowsPlayer || Application.platform == RuntimePlatform.OSXEditor || Application.platform == RuntimePlatform.OSXPlayer;
         }
 
         public void listenForCommand(bool listen)
@@ -111,21 +107,6 @@ namespace Ubiq.XR
             else
             {
                 renderer.enabled = false;
-            }
-
-            // Add a listener for space bar if deployed to mac or windows or when viewed in the editor
-            if (desktopMode)
-            {
-                // Check for key down event for space bar
-                if (Input.GetKeyDown(KeyCode.Space))
-                {
-                    listenForCommand(true);
-                }
-                else if (Input.GetKeyUp(KeyCode.Space))
-                {
-                    listenForCommand(false);
-                }
-                
             }
         }
 
