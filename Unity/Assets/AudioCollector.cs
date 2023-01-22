@@ -26,13 +26,12 @@ public class AudioCollector : MonoBehaviour, INetworkComponent
     {
         Debug.Log("OnAudioRead: " + data.Length);
 
-        if (allAudioData == null || allAudioData.Length == 0)
+        if (allAudioData == null)
         {
-            // If there is no data, fill the array with 0
-            for (int i = 0; i < data.Length; i++)
-            {
-                data[i] = 0;
-            }
+            return;
+        } else if (allAudioData.Length == 0)
+        {
+            allAudioData = null;
             return;
         }
 
@@ -80,7 +79,7 @@ public class AudioCollector : MonoBehaviour, INetworkComponent
     // Update is called once per frame
     void Update()
     {
-        if (allAudioData == null || allAudioData.Length == 0)
+        if (allAudioData == null)
         {
             audioSource.Stop();
         } else if (!audioSource.isPlaying && allAudioData.Length > 0)
