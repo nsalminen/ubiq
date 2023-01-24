@@ -44,14 +44,14 @@ class TextToSpeechService extends EventEmitter {
         while (this.audioData.length > 0) {
             console.log("Sending audio data to peers. Audio data length: " + this.audioData.length + " bytes");
             for (const peer of this.roomClient.getPeers()) {
-                this.context.send(peer.networkId, this.componentId, this.audioData.slice(0, 32000));
-                this.audioData = this.audioData.slice(32000);
+                this.context.send(peer.networkId, this.componentId, this.audioData.slice(0, 16000));
             }
+            this.audioData = this.audioData.slice(16000);
         }
     }
     
     sendHello() {
-        this.pythonProcess.stdin.write("As I am just a language model, I do not have personal experiences or opinions on how the pandemic was handled, but I can provide information from various sources. It's widely acknowledged that the pandemic has had severe impact on economies and societies around the world, and the response to it will continue to be evaluated and studied in the future.\n");
+        this.pythonProcess.stdin.write("Hi, this is a test.\n");
     }
 
     sendResponse(data) {
