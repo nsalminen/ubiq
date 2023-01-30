@@ -8,6 +8,7 @@ using Ubiq.Logging.Utf8Json;
 using Ubiq.Rooms;
 using System;
 using System.Text;
+using Ubiq.Voip;
 
 [NetworkComponentId(typeof(AudioCollector), ComponentId)]
 public class AudioCollector : MonoBehaviour, INetworkComponent
@@ -17,10 +18,15 @@ public class AudioCollector : MonoBehaviour, INetworkComponent
     private NetworkContext context;
     public AudioSource audioSource;
 
+    public VoipAudioSourceOutput voipAudioSourceOutput;
+    public Ubiq.Samples.SpeechIndicator speechIndicator;
+
     // List of audio clips to play
     private List<AudioClip> audioClips = new List<AudioClip>();
     private float[] allAudioData;
     private int position;
+
+    private System.Net.IPEndPoint dummyEndPoint = new System.Net.IPEndPoint(System.Net.IPAddress.Any,0);
 
     void OnAudioRead(float[] data)
     {
@@ -79,6 +85,10 @@ public class AudioCollector : MonoBehaviour, INetworkComponent
     // Update is called once per frame
     void Update()
     {
+        if (speechIndicator)
+        {
+            speechIndicator.InjectStatsSource(voipAudioSourceOutput);
+        }
         if (allAudioData == null)
         {
             audioSource.Stop();
@@ -135,12 +145,21 @@ public class AudioCollector : MonoBehaviour, INetworkComponent
 
     public void ProcessMessage(ReferenceCountedSceneGraphMessage data)
     {
-        
+        Debug.Assert(voipAudioSourceOutput);
+
+        if (data.data.Length < 200)
+        {
+            return;
+        }
+
+        Debug.Log("injecting audio");
+        voipAudioSourceOutput.InjectAudioPcm(data.data.ToArray());
+        return;
 
         // Get the audio data which is in Raw16Khz16BitMonoPcm format
         byte[] audio = data.data.ToArray();
         Debug.Log("Audio received with length: " + audio.Length);
-        
+
         // Append the bytes to allAudioData
         if (allAudioData == null)
         {

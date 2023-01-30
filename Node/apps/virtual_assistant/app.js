@@ -7,6 +7,7 @@ const { TextGenerationService } = require("../../services/text_generation/servic
 // Configuration
 eventType = 2;
 roomGuid = "6765c52b-3ad6-4fb0-9030-2c9a05dc4731";
+postfix = ". Respond in one short sentence."
 
 // Create a connection to a Server
 const connection = UbiqTcpConnection("localhost", 8005);
@@ -32,7 +33,8 @@ textGeneration.onResponse((data) => {
             // This library we use does not return valid JSON. Thereforem, get the answer through regex, by finding the text between {'answer':  and , 'messageId'
             var answer = response.match(/{'answer': (.*?), 'messageId'/)[1];
             // Remove the quotes around the answer by slicing off the first and last character
-            answer = answer.slice(1, -1).replace(/\\n/g, "");
+            answer = answer.slice(1, -1).replace(/\\n/g, "").replace(/\\'/,"'");
+
             console.log("Received " + answer + ", sending to TTS...");
             texttospeechservice.execute(answer);
         }
@@ -43,8 +45,9 @@ transcriptionservice.onResponse((data, peer) => {
     var response = data.toString();
     if (response.startsWith(">")){
         response = response.slice(1); // Slice off the leading '>' character
-        console.log(response);
         if (response.trim()){
+            response = response.trim() + postfix;
+            console.log("Text Generation Request: " + response);
             textGeneration.execute(response);
         }
     }

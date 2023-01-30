@@ -97,7 +97,7 @@ namespace Ubiq.Voip
 
         private string prevIceServersString;
         private IceServerDetailsCollection iceServers;
-        
+
         private NetworkId networkId = new NetworkId(98);
         private G722AudioDecoder decoder = new G722AudioDecoder();
 
@@ -144,7 +144,7 @@ namespace Ubiq.Voip
         private void sendAudioToServer(uint durationRtpUnits, byte[] sample)
         {
             if (triggerSendingAudioToServer) {
-                Debug.Log("Sending audio to server");
+                // Debug.Log("Sending audio to server");
                 // Decode the sample from G722 to PCM
                 short[] decodedSampleShort = decoder.Decode(sample);
                 byte[] decodedSampleByte = new byte[decodedSampleShort.Length * sizeof(short)];
@@ -253,7 +253,7 @@ namespace Ubiq.Voip
             if (peerUuidToConnection.TryGetValue(peer.UUID, out var connection))
             {
                 // Audiosinks are created per connection
-                
+
                 Destroy(connection.gameObject);
                 peerUuidToConnection.Remove(peer.UUID);
             }
@@ -298,7 +298,7 @@ namespace Ubiq.Voip
             // Each network audio sink is a Unity Audio Source. Where sources are created on demand (where none
             // is specified), there should be one source per peer-connection, so that it can be spatialised.
 
-            var pcSink = defaultAudioSink; 
+            var pcSink = defaultAudioSink;
             if (pcSink == null)
             {
                 var audioSourceOutputGo = new GameObject("Voip Audio Output + " + peerUuid)
@@ -312,7 +312,7 @@ namespace Ubiq.Voip
 
             // The default audio source will always be valid - for now, either the specified source, or the system wide microphone.
 
-            var pcSource = defaultAudioSource; 
+            var pcSource = defaultAudioSource;
 
             pc.Setup(objectid,peerUuid,polite, pcSource, pcSink, peerConnectionSource.Acquire());
 
