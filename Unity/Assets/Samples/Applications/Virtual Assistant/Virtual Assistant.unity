@@ -124,12 +124,6 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
---- !u!1 &33384706 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 1206544754330353986, guid: 33cb6d2a29abed346b39b957a9e24d34,
-    type: 3}
-  m_PrefabInstance: {fileID: 1175207191}
-  m_PrefabAsset: {fileID: 0}
 --- !u!114 &338133031 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 219049320038626091, guid: 33cb6d2a29abed346b39b957a9e24d34,
@@ -646,21 +640,6 @@ GameObject:
     type: 3}
   m_PrefabInstance: {fileID: 531284336}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &635260330
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 635260322}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 713aa115a67a34d90ab7653bd0fdf04c, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  speed: 10
-  sampleWindow: 64
-  localSpeaker: {fileID: 33384706}
 --- !u!114 &635260338
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -9317,7 +9296,7 @@ MonoBehaviour:
   recording: 0
   recordingStartTime: 14.110962
   handController: {fileID: 1349425333}
---- !u!114 &635260339
+--- !u!114 &635260340
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -9329,8 +9308,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e1d2aae2afee1fc43b874f945bbefdeb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  indicator: {fileID: 0}
-  handMover: {fileID: 0}
+  handMover: {fileID: 635260338}
+  turnSpeed: 10
 --- !u!20 &737898846 stripped
 Camera:
   m_CorrespondingSourceObject: {fileID: 1206544754330353990, guid: 33cb6d2a29abed346b39b957a9e24d34,
@@ -9860,6 +9839,7 @@ MonoBehaviour:
   voipAudioSourceOutput: {fileID: 1463930078}
   speechIndicator: {fileID: 915109183}
   handMover: {fileID: 635260338}
+  assistantController: {fileID: 635260340}
 --- !u!114 &1853535913
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -9867,7 +9847,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1853535910}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 564680c19fd8c48798e767cdd189c8dc, type: 3}
   m_Name: 
@@ -10660,7 +10640,7 @@ PrefabInstance:
     - target: {fileID: 7068762446378101730, guid: 2fb578800afc87244b5ba3a0fbbd11c0,
         type: 3}
       propertyPath: servers.Array.data[0].send_to_ip
-      value: 128.16.15.169
+      value: localhost
       objectReference: {fileID: 0}
     - target: {fileID: 7068762446378101730, guid: 2fb578800afc87244b5ba3a0fbbd11c0,
         type: 3}

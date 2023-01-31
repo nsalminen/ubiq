@@ -21,6 +21,9 @@ public class VirtualAssistantManager : MonoBehaviour, INetworkComponent
     public VoipAudioSourceOutput voipAudioSourceOutput;
     public SpeechIndicator speechIndicator;
     public HandMover handMover;
+    public VirtualAssistantController assistantController;
+
+    private string speechTargetUuid;
 
     [Serializable]
     private struct Message
@@ -42,12 +45,22 @@ public class VirtualAssistantManager : MonoBehaviour, INetworkComponent
         if (speechIndicator)
         {
             speechIndicator.InjectStatsSource(voipAudioSourceOutput);
+            var volume = speechIndicator.EstimateCurrentVolume();
             if (handMover)
             {
-                if (speechIndicator.EstimateCurrentVolume() > speechIndicator.minVolume)
+                if (volume > speechIndicator.minVolume)
                 {
                     handMover.Play();
                 }
+                else
+                {
+                    handMover.Stop();
+                }
+            }
+            if (assistantController)
+            {
+                assistantController.SetAssistantSpeechVolumeRange(speechIndicator.minVolume,speechIndicator.maxVolume);
+                assistantController.UpdateAssistantSpeechStatus(speechTargetUuid,volume);
             }
         }
     }
@@ -64,6 +77,7 @@ public class VirtualAssistantManager : MonoBehaviour, INetworkComponent
             try
             {
                 message = data.FromJson<Message>();
+                speechTargetUuid = message.targetPeer;
                 Debug.Log("Received audio for peer: " + message.targetPeer + " with length: " + message.audioLength);
                 return;
             }
@@ -78,7 +92,6 @@ public class VirtualAssistantManager : MonoBehaviour, INetworkComponent
             return;
         }
 
-        Debug.Log("injecting audio");
         voipAudioSourceOutput.InjectAudioPcm(data.data.ToArray());
     }
 }
