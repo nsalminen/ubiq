@@ -28,6 +28,14 @@ public class AudioCollector : MonoBehaviour, INetworkComponent
 
     private System.Net.IPEndPoint dummyEndPoint = new System.Net.IPEndPoint(System.Net.IPAddress.Any,0);
 
+    [Serializable]
+    private struct Message
+    {
+        public string type;
+        public string targetPeer;
+        public string audioLength;
+    }
+
     void OnAudioRead(float[] data)
     {
         Debug.Log("OnAudioRead: " + data.Length);
@@ -146,6 +154,23 @@ public class AudioCollector : MonoBehaviour, INetworkComponent
     public void ProcessMessage(ReferenceCountedSceneGraphMessage data)
     {
         Debug.Assert(voipAudioSourceOutput);
+
+        // If the data is less than 100 bytes, then we have have received the audio info header
+        if (data.data.Length < 100)
+        {
+            // Try to parse the data as a message, if it fails, then we have received the audio data
+            Message message;
+            try
+            {
+                message = data.FromJson<Message>();
+                Debug.Log("Received audio for peer: " + message.targetPeer + " with length: " + message.audioLength);
+                return;
+            }
+            catch (Exception e)
+            {
+                Debug.Log("Received audio data");
+            }
+        }
 
         if (data.data.Length < 200)
         {
