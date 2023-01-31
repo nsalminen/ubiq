@@ -26,25 +26,30 @@ class TranscriptionService extends EventEmitter {
         this.onResponseCallbacks = [];
     }
 
-    sendResponse(peer_uuid, data) {
+    sendResponse(peer, data) {
         for (const peer of this.roomClient.getPeers()) {
             this.context.send(peer.networkId, this.componentId, {
                 type: "recognizedText",
-                peer: peer_uuid,
+                peer: peer.uuid,
                 data: data,
             });
         }
     }
 
     spawnProcessForPeer(peer) {
-        console.log("Spawning speech-to-text process for peer " + peer);
-        this.pythonProcesses[peer] = spawn("python", [
+        console.log("Spawning speech-to-text process for peer " + peer.uuid);
+        // var
+        // if (peer.properties && peer.properties["ubiq.samples.social.name"]) {
+        //     // console.log("Peer " + peer.uuid + " has properties: " + JSON.stringify(properties["ubiq.samples.social.name"]));
+
+        // }
+        this.pythonProcesses[peer.uuid] = spawn("python", [
             "-u",
             "../../services/speech_to_text/transcribe_azure.py",
             "--peer",
-            peer,
+            peer.uuid,
         ]);
-        this.pythonProcesses[peer].stdout.on("data", (data) => {
+        this.pythonProcesses[peer.uuid].stdout.on("data", (data) => {
             if (this.broadcastResults) {
                 var response = data.toString();
                 if (response.startsWith(">")) {
@@ -56,7 +61,7 @@ class TranscriptionService extends EventEmitter {
 
         // Register the new peer's process with all existing callbacks
         for (let i = 0; i < this.onResponseCallbacks.length; i++) {
-            this.pythonProcesses[peer].stdout.on("data", (data) => this.onResponseCallbacks[i](data, peer));
+            this.pythonProcesses[peer.uuid].stdout.on("data", (data) => this.onResponseCallbacks[i](data, peer));
         }
     }
 
@@ -68,7 +73,7 @@ class TranscriptionService extends EventEmitter {
         this.roomClient.addListener(
             "OnPeerAdded",
             function (peer) {
-                this.spawnProcessForPeer(peer.uuid);
+                this.spawnProcessForPeer(peer);
             }.bind(this)
         );
         this.roomClient.addListener(

@@ -32,7 +32,7 @@ class TextureGenerationService extends EventEmitter {
             "--output_folder",
             "../../apps/texture_generation/data",
             "--prompt_postfix",
-            "', in the style of Yayoi Kusama'"
+            ", seamless, flat texture, video game texture, 4k"
         ]);
         this.pythonProcess.stdout.on("data", (data) => {
             if (this.broadcastResults) {

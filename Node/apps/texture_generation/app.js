@@ -47,13 +47,12 @@ selectionCollector.addListener("OnLogMessage", (type, message) => {
 
 transcriptionService.onResponse((data, peer) => {
     response = data.toString();
-    console.log("Received response from peer: " + peer + " with message: " + response);
+    var peer_uuid = peer.uuid; // We now return the full peer object, so we need to extract the UUID
+    console.log("Received response from peer: " + peer_uuid + " with message: " + response);
     if (response.startsWith(">")) {
         response = response.slice(1); // Slice off the leading '>' character
-        console.log("Hello");
         let commandMatch = commandRegex.exec(response);
         if (commandMatch != null) {
-            console.log("Hello2");
             if (commandMatch[1] && commandMatch[2]) {
                 console.log("Command recognized");
                 console.log(commandMatch[1], commandMatch[2]);
@@ -63,11 +62,11 @@ transcriptionService.onResponse((data, peer) => {
                 if (textureTarget.toLowerCase() == "this" || textureTarget.toLowerCase() == "that") {
                     // If so, we need to retrieve the last selected object by the peer in lastPeerSelection, if it was within the last 10 seconds
                     const time = new Date().getTime();
-                    if (lastPeerSelection[peer] && time - lastPeerSelection[peer].time < 10000) {
-                        textureTarget = lastPeerSelection[peer].message;
+                    if (lastPeerSelection[peer_uuid] && time - lastPeerSelection[peer_uuid].time < 10000) {
+                        textureTarget = lastPeerSelection[peer_uuid].message;
                         console.log("Changing ray-based texture target to: " + textureTarget);
                     } else {
-                        console.log("No object selected by peer " + peer + " in the last 10 seconds, so cannot change texture target");
+                        console.log("No object selected by peer " + peer_uuid + " in the last 10 seconds, so cannot change texture target");
                     }
                 }
 

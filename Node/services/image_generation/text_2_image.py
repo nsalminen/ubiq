@@ -28,7 +28,7 @@ def generateTextureFromPrompt(pipe, generator, prompt):
 
         prompt += args.prompt_postfix
         image = pipe(
-            prompt, guidance_scale=5.5, num_inference_steps=15, generator=generator
+            prompt, guidance_scale=7, num_inference_steps=32, generator=generator
         ).images[0]
         md5_name = hashlib.md5(image.tobytes()).hexdigest()
         # folder = os.path.dirname(os.path.abspath(__file__))

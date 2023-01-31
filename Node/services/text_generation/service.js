@@ -1,5 +1,5 @@
 const { write, appendFileSync } = require("fs");
-const { nextTick } = require("process");
+const { nextTick, send } = require("process");
 const { Stream, EventEmitter, Writable } = require("stream");
 const { NetworkId, Message } = require("../../ubiq/messaging");
 const wav = require("wav");
@@ -21,7 +21,7 @@ class TextGenerationService extends EventEmitter {
     }
 
     start(broadcastResults = false) {
-        this.pythonProcess = spawn("python", ["-u", __dirname + "\\text_2_chatgpt.py"]);
+        this.pythonProcess = spawn("python", ["-u", __dirname + "\\test_text_2_chatgpt.py"]);
         this.pythonProcess.stdout.on("data", (data) => {
             if (broadcastResults) {
                 var response = data.toString();
@@ -60,7 +60,6 @@ class TextGenerationService extends EventEmitter {
 
     execute(msg) {
         //maybe local process message
-        console.log("Until here all's ok...")
         if (this.pythonProcess) {
             this.pythonProcess.stdin.write(msg + "\n");
         }
