@@ -1,9 +1,5 @@
-const { write, appendFileSync } = require("fs");
-const { nextTick } = require("process");
-const { Stream, EventEmitter, Writable } = require("stream");
 const { NetworkId, Message } = require("../../ubiq/messaging");
 const wav = require("wav");
-const { throws } = require("assert");
 const spawn = require("child_process").spawn;
 
 const writer = new wav.FileWriter("audio.wav", {
@@ -12,9 +8,8 @@ const writer = new wav.FileWriter("audio.wav", {
     bitDepth: 16, // Bit depth (16 for G722)
 });
 
-class TranscriptionService extends EventEmitter {
+class TranscriptionService {
     constructor(scene, broadcastResults = false) {
-        super();
         this.objectId = new NetworkId(98);
         this.componentId = 98;
         this.audioData = Buffer.alloc(0);

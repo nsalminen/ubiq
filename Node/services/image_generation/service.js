@@ -1,15 +1,8 @@
-const { write, appendFileSync } = require("fs");
-const { nextTick } = require("process");
-const { Stream, EventEmitter, Writable } = require("stream");
 const { NetworkId, Message } = require("../../ubiq/messaging");
-const wav = require("wav");
-const { throws } = require("assert");
 const spawn = require("child_process").spawn;
-const { LogCollectorMessage } = require("../../ubiq/logcollector");
 
-class TextureGenerationService extends EventEmitter {
+class ImageGenerationService {
     constructor(scene, broadcastResults = false) {
-        super();
         this.objectId = new NetworkId(97);
         this.componentId = 97;
         this.audioData = Buffer.alloc(0);
@@ -74,8 +67,7 @@ class TextureGenerationService extends EventEmitter {
         );
     }
 
-    execute(msg) {
-        //maybe local process message
+    processLocalMessage(msg) {
         if (this.pythonProcess) {
             this.pythonProcess.stdin.write(msg + "\n");
         }
@@ -97,5 +89,5 @@ class TextureGenerationService extends EventEmitter {
 }
 
 module.exports = {
-    TextureGenerationService,
+    ImageGenerationService,
 };

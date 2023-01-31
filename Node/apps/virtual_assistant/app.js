@@ -38,7 +38,7 @@ textGeneration.onResponse((data) => {
             // Remove the quotes around the answer by slicing off the first and last character
             answer = answer.slice(1, -1).replace(/\\n/g, "");
             console.log("Received " + answer + ", sending to TTS... for peer " + targetPeer.uuid);
-            texttospeechservice.execute(answer, targetPeer);
+            texttospeechservice.processLocalMessage(answer, targetPeer);
         }
     }
 });
@@ -55,7 +55,7 @@ transcriptionservice.onResponse((data, peer) => {
         response = response.slice(1); // Slice off the leading '>' character
         if (response.trim()){
             console.log(peerName + "-> Agent: " + response);
-            textGeneration.execute(peerName + "-> Agent: " + response);
+            textGeneration.processLocalMessage(peerName + "-> Agent: " + response);
         }
     }
 });

@@ -1,14 +1,8 @@
-const { write, appendFileSync } = require("fs");
-const { nextTick, send } = require("process");
-const { Stream, EventEmitter, Writable } = require("stream");
 const { NetworkId, Message } = require("../../ubiq/messaging");
-const wav = require("wav");
-const { throws } = require("assert");
 const spawn = require("child_process").spawn;
 
-class TextGenerationService extends EventEmitter {
+class TextGenerationService {
     constructor(scene) {
-        super();
         this.objectId = new NetworkId(96);
         this.componentId = 96;
         this.audioData = Buffer.alloc(0);
@@ -58,8 +52,7 @@ class TextGenerationService extends EventEmitter {
         );
     }
 
-    execute(msg) {
-        //maybe local process message
+    processLocalMessage(msg) {
         if (this.pythonProcess) {
             this.pythonProcess.stdin.write(msg + "\n");
         }

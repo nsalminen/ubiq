@@ -78,7 +78,7 @@ transcriptionService.onResponse((data, peer) => {
                         peer: peer,
                     });
                 }
-                textureGeneration.execute(commandMatch[2]);
+                textureGeneration.processLocalMessage(commandMatch[2]);
             } else {
                 console.log("shit");
             }

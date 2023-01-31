@@ -3,7 +3,7 @@ const spawn = require("child_process").spawn;
 
 
 class TargetedTextToSpeechService extends TextToSpeechService {
-    constructor(scene, targetPeerId, broadcastResults = false) {
+    constructor(scene, broadcastResults = false) {
         super(scene, broadcastResults);
         this.targetPeer = null;
     }
@@ -14,14 +14,12 @@ class TargetedTextToSpeechService extends TextToSpeechService {
             "../../services/text_to_speech/text_to_speech_azure.py"
         ]);
         this.pythonProcess.stdout.on("data", (data) => {
-            if (broadcastResults) {
+            if (this.broadcastResults) {
                 this.audioData = Buffer.concat([this.audioData, data]);
                 this.sendAudioInfoHeader(data.length);
                 this.sendAudioData();
             }
         });
-        // Wait 1 second before sending the first test message
-        // setTimeout(() => this.sendHello(), 1000);
     }
 
     sendAudioData() {
@@ -47,8 +45,8 @@ class TargetedTextToSpeechService extends TextToSpeechService {
         }
     }
 
-    execute(msg, targetPeer = null) {
-        //maybe local process message
+    processLocalMessage(msg, targetPeer = null) {
+        
         this.targetPeer = targetPeer;
 
         if (this.pythonProcess) {

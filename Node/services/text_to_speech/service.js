@@ -1,22 +1,16 @@
-const { write, appendFileSync } = require("fs");
-const { nextTick } = require("process");
-const { Stream, EventEmitter, Writable } = require("stream");
 const { NetworkId, Message } = require("../../ubiq/messaging");
-const wav = require("wav");
-const { throws } = require("assert");
 const spawn = require("child_process").spawn;
-const { LogCollectorMessage } = require("../../ubiq/logcollector");
 
-class TextToSpeechService extends EventEmitter {
+class TextToSpeechService {
     constructor(scene, broadcastResults = false) {
-        super();
         this.objectId = new NetworkId(95);
         this.componentId = 95;
         this.audioData = Buffer.alloc(0);
-
+        
         this.context = scene.register(this);
         this.registerRoomClientEvents();
         this.pythonProcess = null;
+        this.broadcastResults = broadcastResults;
 
         // Dictionary of peer uuids and their last message including time
         this.lastPeerSelection = {};
@@ -30,17 +24,15 @@ class TextToSpeechService extends EventEmitter {
             "../../services/text_to_speech/text_to_speech_azure.py"
         ]);
         this.pythonProcess.stdout.on("data", (data) => {
-            if (broadcastResults) {
+            if (this.broadcastResults) {
                 this.audioData = Buffer.concat([this.audioData, data]);
                 this.sendAudioData();
             }
         });
-        // Wait 1 second before sending the first test message
-        // setTimeout(() => this.sendHello(), 1000);
     }
 
     sendAudioData() {
-        // For each peer, send the audio data in chunks of 1024 bytes
+        // For each peer, send the audio data in chunks of 16000 bytes
         while (this.audioData.length > 0) {
             console.log("Sending audio data to peers. Audio data length: " + this.audioData.length + " bytes");
             for (const peer of this.roomClient.getPeers()) {
@@ -48,10 +40,6 @@ class TextToSpeechService extends EventEmitter {
             }
             this.audioData = this.audioData.slice(16000);
         }
-    }
-    
-    sendHello() {
-        this.pythonProcess.stdin.write("Hi, this is a test.\n");
     }
 
     sendResponse(data) {
@@ -66,26 +54,9 @@ class TextToSpeechService extends EventEmitter {
 
     registerRoomClientEvents() {
         this.roomClient = this.context.scene.findComponent("RoomClient");
-        // if (this.roomClient == undefined) {
-        //     throw "RoomClient must be added to the scene before AudioCollector";
-        // }
-        // this.roomClient.addListener(
-        //     "OnPeerAdded",
-        //     function () {
-        //         console.log("AudioCollector OnPeerAdded");
-        //     }.bind(this)
-        // );
-
-        // this.roomClient.addListener(
-        //     "OnPeerRemoved",
-        //     function () {
-        //         console.log("AudioCollector OnPeerRemoved");
-        //     }.bind(this)
-        // );
     }
 
-    execute(msg) {
-        //maybe local process message
+    processLocalMessage(msg) {
         if (this.pythonProcess) {
             this.pythonProcess.stdin.write(msg + "\n");
         }

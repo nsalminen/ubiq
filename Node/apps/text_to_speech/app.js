@@ -37,7 +37,7 @@ textGeneration.onResponse((data) => {
             // Remove \n characters
             answer = answer.replace(/\\n/g, "");
             console.log("Received " + answer + ", sending to TTS...");
-            texttospeechservice.execute(answer);
+            texttospeechservice.processLocalMessage(answer);
         }
     }
 });
@@ -51,7 +51,7 @@ transcriptionservice.onResponse((data, peer) => {
         console.log(response);
         // texttospeechservice.execute(response);
         if (response.trim()){
-            textGeneration.execute(response);
+            textGeneration.processLocalMessage(response);
         }
     }
 });
