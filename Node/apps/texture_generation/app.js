@@ -1,7 +1,7 @@
 const { NetworkScene, RoomClient, LogCollector, UbiqTcpConnection } = require("../../ubiq");
 const fs = require("fs");
 const { TranscriptionService } = require("../../services/speech_to_text/service");
-const { TextureGenerationService } = require("../../services/image_generation/service");
+const { ImageGenerationService } = require("../../services/image_generation/service");
 const { FileServer } = require("../../services/file_server/service");
 const commandRegex =
     /(?:transform|create|make|set|change|turn)(?: the| an| some)? (?:(?:(.*?)?(?:(?: to| into| seem| look| appear|))?(?: like|like a|like an| a)? (.*)))/i;
@@ -24,7 +24,7 @@ scene.addConnection(connection);
 // A RoomClient to join a Room
 const roomClient = new RoomClient(scene);
 const transcriptionService = new TranscriptionService(scene);
-const textureGeneration = new TextureGenerationService(scene);
+const textureGeneration = new ImageGenerationService(scene);
 const selectionCollector = new LogCollector(scene);
 
 lastPeerSelection = {};
