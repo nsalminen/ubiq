@@ -233,7 +233,6 @@ namespace Ubiq.Voip
 
             public void AddRtp (AudioRtp rtp)
             {
-                Debug.Log("add rtp");
                 rtps.Add(rtp);
             }
         }
@@ -331,8 +330,6 @@ namespace Ubiq.Voip
             GotAudioRtp(remoteEndPoint:dummyEndPoint,
                 ssrc:0,seqnum:0,timestamp:injectionTime,payloadID:0,marker:false,payload:g722);
             lastInjected = (int)injectionTime + g722.Length*2;
-
-            Debug.Log("absTimeSamples: " + rtpBufferer.absTimeSamples + " injectiontime: " + injectionTime);
         }
 
         private G722AudioEncoder encoder = new G722AudioEncoder();

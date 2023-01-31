@@ -25,8 +25,6 @@ namespace Ubiq.Samples
         public Vector3 maxIndicatorScale;
         public float sampleSecondsPerIndicator;
 
-        public HandMover handMover;
-
         public float minVolume;
         public float maxVolume;
 
@@ -38,11 +36,26 @@ namespace Ubiq.Samples
         private int currentFrameSampleCount = 0;
         private float[] volumeFrames;
 
-        private IAudioStats statsSource;
+        private IAudioStats injectedStatsSource;
 
         public void InjectStatsSource(IAudioStats stats)
         {
-            this.statsSource = stats;
+            this.injectedStatsSource = stats;
+            enabled = true;
+
+            if (this.injectedStatsSource != null)
+            {
+                enabled = true;
+            }
+        }
+
+        public float EstimateCurrentVolume()
+        {
+            if (volumeFrames != null && volumeFrames.Length > 0)
+            {
+                return volumeFrames[0];
+            }
+            return 0.0f;
         }
 
         private void Start()
@@ -53,28 +66,20 @@ namespace Ubiq.Samples
 
         private void LateUpdate()
         {
-            if (avatar && avatar.IsLocal)
+            if (injectedStatsSource == null && (!avatar || avatar.IsLocal || !voipAvatar))
             {
-                Hide();
-                enabled = false;
-                return;
-            }
-            // if (!avatar || avatar.IsLocal || !voipAvatar)
-            // {
-            //     Hide();
-            //     enabled = false;
-            //     return;
-            // }
+                if (!avatar || avatar.IsLocal || !voipAvatar)
+                {
+                    Hide();
+                    enabled = false;
+                    return;
+                }
 
-            // if (!voipAvatar.peerConnection)
-            // {
-            //     Hide();
-            //     return;
-            // }
-
-            if (statsSource == null)
-            {
-                return;
+                if (!voipAvatar.peerConnection)
+                {
+                    Hide();
+                    return;
+                }
             }
 
             UpdateSamples();
@@ -91,14 +96,14 @@ namespace Ubiq.Samples
 
             var volumeWindowSampleCount = 0;
 
+            var tmpStatsSource = injectedStatsSource != null
+                ? injectedStatsSource
+                : (voipAvatar.peerConnection.audioSink as IAudioStats);
 
-            // if(voipAvatar.peerConnection.audioSink is IAudioStats)
-            // {
-                var stats = statsSource.lastFrameStats;//(voipAvatar.peerConnection.audioSink as IAudioStats).lastFrameStats;
-                currentFrameVolumeSum += stats.volume;
-                currentFrameSampleCount += stats.samples;
-                volumeWindowSampleCount = (int)(sampleSecondsPerIndicator * stats.sampleRate);
-            // }
+            var stats = tmpStatsSource.lastFrameStats;
+            currentFrameVolumeSum += stats.volume;
+            currentFrameSampleCount += stats.samples;
+            volumeWindowSampleCount = (int)(sampleSecondsPerIndicator * stats.sampleRate);
 
             if (currentFrameSampleCount > volumeWindowSampleCount)
             {
@@ -158,19 +163,10 @@ namespace Ubiq.Samples
                     var t = (volumeFrames[i] - minVolume) / range;
                     volumeIndicators[i].localScale = Vector3.Lerp(
                         minIndicatorScale,maxIndicatorScale,t);
-
-                    if (handMover)
-                    {
-                        handMover.Play();
-                    }
                 }
                 else
                 {
                     volumeIndicators[i].gameObject.SetActive(false);
-                    if (handMover)
-                    {
-                        handMover.Stop();
-                    }
                 }
             }
         }

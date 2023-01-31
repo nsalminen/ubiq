@@ -75,7 +75,6 @@ public class HandMover : MonoBehaviour
         if (playing)
         {
             var frameIdx = GetFrameIndex(animTime);
-            Debug.Log(frameIdx);
             if ((int)frameIdx < 0 || (int)(frameIdx+1) >= leftHandPositions.Count)
             {
                 return;
