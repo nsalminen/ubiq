@@ -49,7 +49,7 @@ transcriptionservice.onResponse((data, peer) => {
     if (response.startsWith(">")){
         response = response.slice(1); // Slice off the leading '>' character
         console.log(response);
-        // texttospeechservice.execute(response);
+        // texttospeechservice.processLocalMessage(response);
         if (response.trim()){
             textGeneration.processLocalMessage(response);
         }
