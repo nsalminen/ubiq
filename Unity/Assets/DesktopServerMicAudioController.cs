@@ -2,16 +2,20 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Ubiq.Voip;
+using Ubiq.XR;
 
 public class DesktopServerMicAudioController : MonoBehaviour
 {
     public VoipPeerConnectionManager voipPeerConnectionManager;
     public bool desktopMode = false;
 
+    private HandController[] handControllers;
+
     // Start is called before the first frame update
     void Start()
     {
         desktopMode = Application.platform == RuntimePlatform.WindowsEditor || Application.platform == RuntimePlatform.WindowsPlayer || Application.platform == RuntimePlatform.OSXEditor || Application.platform == RuntimePlatform.OSXPlayer;
+        handControllers = FindObjectsOfType<HandController>(includeInactive:true);
     }
 
     // Update is called once per frame
@@ -25,11 +29,23 @@ public class DesktopServerMicAudioController : MonoBehaviour
             {
                 listenForCommand(true);
             }
-            else if (Input.GetKeyUp(KeyCode.Space))
+            if (Input.GetKeyUp(KeyCode.Space))
             {
                 listenForCommand(false);
             }
-        }   
+        }
+        if (!Application.isEditor && Application.platform == RuntimePlatform.Android)
+        {
+            var listen = false;
+            foreach(var controller in handControllers)
+            {
+                if (controller.PrimaryButtonState)
+                {
+                    listen = true;
+                }
+            }
+            listenForCommand(listen);
+        }
     }
 
     public void listenForCommand(bool listen)
