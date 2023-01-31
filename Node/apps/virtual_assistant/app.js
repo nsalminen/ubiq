@@ -8,6 +8,7 @@ const { TextGenerationService } = require("../../services/text_generation/servic
 // Configuration
 eventType = 2;
 roomGuid = "6765c52b-3ad6-4fb0-9030-2c9a05dc4731";
+postfix = ". Respond in one short sentence."
 
 // Create a connection to a Server
 const connection = UbiqTcpConnection("localhost", 8005);

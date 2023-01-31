@@ -27,7 +27,7 @@ public class ObserveTheSpeaker : MonoBehaviour
 
     public AudioClip MicrophoneToAudioClip()
     {
-        
+
         VoipMicrophoneInput ml = peerConnectionManager.GetAudioSource() as VoipMicrophoneInput;
         return ml.GetAudioClip();
     }
@@ -52,23 +52,25 @@ public class ObserveTheSpeaker : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        var voipOutput = GetComponentInChildren<VoipAudioSourceOutput>();
         microphoneClip = MicrophoneToAudioClip();
         if (microphoneClip)
         {
             float loudness = GetLoudnessFromAudioClip(Microphone.GetPosition(microphoneName), microphoneClip);
-            
+            loudness = Mathf.Max(loudness,voipOutput.lastFrameStats.volume);
+
             //Debug.Log(loudness);
-            if(loudness > 0.05f) 
+            if(loudness > 0.01f )
             {
                 // Get the direction of the sound
                 soundDirection = localSpeaker.transform.position - transform.position;
-                soundDirection = new Vector3(soundDirection.x, localSpeaker.transform.position.y, soundDirection.z);
+                soundDirection = new Vector3(soundDirection.x, 0, soundDirection.z);
 
                 // Rotate the head towards the sound
                 transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(soundDirection), speed * Time.deltaTime);
             }
 
         }
-        
+
     }
 }

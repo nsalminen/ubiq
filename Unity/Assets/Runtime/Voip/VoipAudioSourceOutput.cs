@@ -77,10 +77,10 @@ namespace Ubiq.Voip
             public int syncSamples { get; private set; }
             public float gain;
 
-            private int absTimeSamples = -1;
+            public int absTimeSamples = -1;
             private int lastTimeSamples;
-            private int missedRtps = RESYNC_AFTER_RTP_MISS_NUM;
-            private long bufferOffset = -1;
+            private int missedRtps = 0;//RESYNC_AFTER_RTP_MISS_NUM;
+            public long bufferOffset = -1;
 
             private System.Diagnostics.Stopwatch stopwatch;
             private List<AudioRtp> rtps = new List<AudioRtp>();
@@ -114,6 +114,7 @@ namespace Ubiq.Voip
                     return;
                 }
 
+                Debug.Log(rtps.Count);
                 // First scan through to check sync
                 for (int i = 0; i < rtps.Count; i++)
                 {
@@ -232,14 +233,15 @@ namespace Ubiq.Voip
 
             public void AddRtp (AudioRtp rtp)
             {
+                Debug.Log("add rtp");
                 rtps.Add(rtp);
             }
         }
 
         public int sampleRate { get { return 16000; } }
-        public int bufferSamples { get { return sampleRate * 2; } }
+        public int bufferSamples { get { return sampleRate * 60; } }
         public int latencySamples { get { return sampleRate / 5; } }
-        public int syncSamples { get { return sampleRate * 1; } }
+        public int syncSamples { get { return sampleRate * 30; } }
 
         public float gain = 1.0f;
         public AudioSource unityAudioSource { get; private set; }
@@ -317,6 +319,49 @@ namespace Ubiq.Voip
             var timeSamples = unityAudioSource.timeSamples;
             var clip = unityAudioSource.clip;
             lastFrameStats = rtpBufferer.Commit(timeSamples,clip);
+        }
+
+        private int lastInjected = 0;
+        private System.Net.IPEndPoint dummyEndPoint = new System.Net.IPEndPoint(System.Net.IPAddress.Any,0);
+        public void InjectAudio(byte[] g722)
+        {
+            var injectionTime = (uint)Mathf.Max(lastInjected,rtpBufferer.absTimeSamples + rtpBufferer.bufferOffset + latencySamples*2);
+
+            // Only need timestamp and payload
+            GotAudioRtp(remoteEndPoint:dummyEndPoint,
+                ssrc:0,seqnum:0,timestamp:injectionTime,payloadID:0,marker:false,payload:g722);
+            lastInjected = (int)injectionTime + g722.Length*2;
+
+            Debug.Log("absTimeSamples: " + rtpBufferer.absTimeSamples + " injectiontime: " + injectionTime);
+        }
+
+        private G722AudioEncoder encoder = new G722AudioEncoder();
+        public void InjectAudioPcm(byte[] pcm)
+        {
+            var pad = false;
+            var len = pcm.Length/2;
+            if (len == 0)
+            {
+                return;
+            }
+            if (len % 2 == 1)
+            {
+                pad = true;
+                len += 1;
+            }
+            var shorts = new short[len];
+            for (int i = 0; i < shorts.Length; i++) {
+                if (pad && i == shorts.Length-1)
+                {
+                    continue;
+                }
+                shorts[i] = System.BitConverter.ToInt16 (pcm,i* 2);
+            }
+            if (pad)
+            {
+                shorts[shorts.Length-1] = shorts[shorts.Length-2];
+            }
+            InjectAudio(encoder.Encode(shorts));
         }
 
         private float PcmToFloat (short pcm)

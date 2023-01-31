@@ -25,6 +25,8 @@ namespace Ubiq.Samples
         public Vector3 maxIndicatorScale;
         public float sampleSecondsPerIndicator;
 
+        public HandMover handMover;
+
         public float minVolume;
         public float maxVolume;
 
@@ -36,6 +38,13 @@ namespace Ubiq.Samples
         private int currentFrameSampleCount = 0;
         private float[] volumeFrames;
 
+        private IAudioStats statsSource;
+
+        public void InjectStatsSource(IAudioStats stats)
+        {
+            this.statsSource = stats;
+        }
+
         private void Start()
         {
             avatar = GetComponentInParent<Avatars.Avatar>();
@@ -44,16 +53,27 @@ namespace Ubiq.Samples
 
         private void LateUpdate()
         {
-            if (!avatar || avatar.IsLocal || !voipAvatar)
+            if (avatar && avatar.IsLocal)
             {
                 Hide();
                 enabled = false;
                 return;
             }
+            // if (!avatar || avatar.IsLocal || !voipAvatar)
+            // {
+            //     Hide();
+            //     enabled = false;
+            //     return;
+            // }
 
-            if (!voipAvatar.peerConnection)
+            // if (!voipAvatar.peerConnection)
+            // {
+            //     Hide();
+            //     return;
+            // }
+
+            if (statsSource == null)
             {
-                Hide();
                 return;
             }
 
@@ -71,13 +91,14 @@ namespace Ubiq.Samples
 
             var volumeWindowSampleCount = 0;
 
-            if(voipAvatar.peerConnection.audioSink is IAudioStats)
-            {
-                var stats = (voipAvatar.peerConnection.audioSink as IAudioStats).lastFrameStats;
+
+            // if(voipAvatar.peerConnection.audioSink is IAudioStats)
+            // {
+                var stats = statsSource.lastFrameStats;//(voipAvatar.peerConnection.audioSink as IAudioStats).lastFrameStats;
                 currentFrameVolumeSum += stats.volume;
                 currentFrameSampleCount += stats.samples;
                 volumeWindowSampleCount = (int)(sampleSecondsPerIndicator * stats.sampleRate);
-            }
+            // }
 
             if (currentFrameSampleCount > volumeWindowSampleCount)
             {
@@ -137,10 +158,19 @@ namespace Ubiq.Samples
                     var t = (volumeFrames[i] - minVolume) / range;
                     volumeIndicators[i].localScale = Vector3.Lerp(
                         minIndicatorScale,maxIndicatorScale,t);
+
+                    if (handMover)
+                    {
+                        handMover.Play();
+                    }
                 }
                 else
                 {
                     volumeIndicators[i].gameObject.SetActive(false);
+                    if (handMover)
+                    {
+                        handMover.Stop();
+                    }
                 }
             }
         }
