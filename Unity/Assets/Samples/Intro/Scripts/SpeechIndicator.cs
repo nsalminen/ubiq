@@ -49,6 +49,15 @@ namespace Ubiq.Samples
             }
         }
 
+        public float EstimateCurrentVolume()
+        {
+            if (volumeFrames != null && volumeFrames.Length > 0)
+            {
+                return volumeFrames[0];
+            }
+            return 0.0f;
+        }
+
         private void Start()
         {
             avatar = GetComponentInParent<Avatars.Avatar>();
@@ -154,19 +163,10 @@ namespace Ubiq.Samples
                     var t = (volumeFrames[i] - minVolume) / range;
                     volumeIndicators[i].localScale = Vector3.Lerp(
                         minIndicatorScale,maxIndicatorScale,t);
-
-                    if (handMover)
-                    {
-                        handMover.Play();
-                    }
                 }
                 else
                 {
                     volumeIndicators[i].gameObject.SetActive(false);
-                    if (handMover)
-                    {
-                        handMover.Stop();
-                    }
                 }
             }
         }

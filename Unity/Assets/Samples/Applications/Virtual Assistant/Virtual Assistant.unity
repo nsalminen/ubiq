@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.17583819, g: 0.22004095, b: 0.30234134, a: 1}
+  m_IndirectSpecularColor: {r: 0.17593624, g: 0.22017018, b: 0.3024987, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -555,7 +555,7 @@ PrefabInstance:
     - target: {fileID: 3172939939781028348, guid: e19c5579408584b48be6e095782d87d7,
         type: 3}
       propertyPath: m_Name
-      value: Floating BodyA Avatar
+      value: Virtual Assistant Avatar
       objectReference: {fileID: 0}
     - target: {fileID: 3444175152561107260, guid: e19c5579408584b48be6e095782d87d7,
         type: 3}
@@ -9317,6 +9317,20 @@ MonoBehaviour:
   recording: 0
   recordingStartTime: 14.110962
   handController: {fileID: 1349425333}
+--- !u!114 &635260339
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 635260322}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e1d2aae2afee1fc43b874f945bbefdeb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  indicator: {fileID: 0}
+  handMover: {fileID: 0}
 --- !u!20 &737898846 stripped
 Camera:
   m_CorrespondingSourceObject: {fileID: 1206544754330353990, guid: 33cb6d2a29abed346b39b957a9e24d34,
@@ -9807,7 +9821,7 @@ GameObject:
   - component: {fileID: 1853535912}
   - component: {fileID: 1853535913}
   m_Layer: 0
-  m_Name: Server Audio Manager
+  m_Name: Virtual Assistant Manager
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -9843,9 +9857,9 @@ MonoBehaviour:
   networkId:
     a: 0
     b: 95
-  audioSource: {fileID: 1413348229}
   voipAudioSourceOutput: {fileID: 1463930078}
   speechIndicator: {fileID: 915109183}
+  handMover: {fileID: 635260338}
 --- !u!114 &1853535913
 MonoBehaviour:
   m_ObjectHideFlags: 0
