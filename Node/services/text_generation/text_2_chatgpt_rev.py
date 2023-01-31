@@ -1,5 +1,5 @@
 import asyncio
-from ChatGPT_lite.ChatGPT import Chatbot
+from revChatGPT.Official import Chatbot
 import sys
 import argparse
 
@@ -29,8 +29,10 @@ def generateTextFromPrompt(chatbot, prompt):
     prompt = prompt.decode()
     if(prompt != "" and busy == False):
         busy = True
-        response = loop.run_until_complete(chatbot.ask(prompt))
-        print(">", response)
+        # response = loop.run_until_complete(chatbot.ask(prompt))
+        response = chatbot.ask(prompt + args.prompt_suffix)
+        # Trim any whitespace from start of response and print
+        print(">", response["choices"][0]["text"].lstrip())
         
         busy = False
 
@@ -38,26 +40,29 @@ def recognize_from_stdin():
     global chatbot, done, busy, loop
     
     if(chatbot == None):
-        chatbot = Chatbot(cookie, "https://gpt.pawan.krd")
-        # Create a new event loop
-        loop = asyncio.new_event_loop()
-        # Set the event loop as the default
-        asyncio.set_event_loop(loop)
-        # Wait for chatbot to be ready
-        loop.run_until_complete(chatbot.wait_for_ready())
+        chatbot = Chatbot(api_key="ENTER API KEY HERE")
+        # # Create a new event loop
+        # loop = asyncio.new_event_loop()
+        # # Set the event loop as the default
+        # asyncio.set_event_loop(loop)
+        # # Wait for chatbot to be ready
+        # loop.run_until_complete(chatbot.wait_for_ready())
 
         # If we have a preprompt, tell ChatGPT now, before we start receiving input
         if args.preprompt:
-            loop.run_until_complete(chatbot.ask(args.preprompt))
+            print("Sending preprompt...")
+            response = chatbot.ask(args.preprompt)
+            print("Response received. Ready to receive input.")
+            # print("> Agent -> Everyone: ", response["choices"][0]["text"].lstrip())
     
     # Write stdin to the stream
     while not done:
         try:
-            print("Text generator ready for input...")
             line = sys.stdin.buffer.readline()
-            if len(line) == 0:
+            # Check if line is empty or only whitespace
+            if len(line) == 0 or line.isspace():
                 continue
-            generateTextFromPrompt(chatbot, line + args.prompt_suffix)
+            generateTextFromPrompt(chatbot, line)
         except KeyboardInterrupt:
             break
 

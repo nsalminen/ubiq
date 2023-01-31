@@ -33,12 +33,15 @@ textGeneration.onResponse((data) => {
         // If the response is not an empty string and does not contain only whitespace
         if (response.trim()){
             // The unofficial library we currently use does not return valid JSON. Thereforem, get the answer through regex, by finding the text between {'answer':  and , 'messageId'
-            var answer = response.match(/{'answer': (.*?), 'messageId'/)[1];
-            console.log("Answer: " + answer);
-            answer = answer.slice(1, -1).replace(/\\n/g, ""); // Remove the quotes around the answer by slicing off the first and last character. Also, remove the newline characters.
-            console.log("Received " + answer + ", sending to TTS... for peer " + targetPeer.uuid);
-            answer = answer.replace(/.*->.*: /, ""); // Trim the part of the answer the contains "Agent -> Person: " from the beginning of the answer.
-            texttospeechservice.processLocalMessage(answer, targetPeer);
+            // var answer = response.match(/{'answer': (.*?), 'messageId'/)[1];
+            // console.log("Answer: " + answer);
+            // answer = answer.slice(1, -1).replace(/\\n/g, ""); // Remove the quotes around the answer by slicing off the first and last character. Also, remove the newline characters.
+
+            // Remove leading whitespace from response
+            response = response.replace(/^\s+/g, '');
+            // console.log("Received " + response + ", sending to TTS... for peer " + targetPeer.uuid);
+            response = response.replace(/.*->.*: /, ""); // Trim the part of the answer the contains "Agent -> Person: " from the beginning of the answer.
+            texttospeechservice.processLocalMessage(response, targetPeer);
         }
     }
 });
@@ -54,7 +57,7 @@ transcriptionservice.onResponse((data, peer) => {
     if (response.startsWith(">")){
         response = response.slice(1); // Slice off the leading '>' character
         if (response.trim()){
-            console.log(peerName + "-> Agent: " + response);
+            console.log(peerName + " -> Agent: " + response);
             textGeneration.processLocalMessage(peerName + "-> Agent: " + response);
         }
     }
