@@ -26,46 +26,46 @@ public class HandMover : MonoBehaviour
     public List<Quaternion> rightHandRotations;
     public List<float> times;
 
-    public float animTime;
-    public bool playing;
+    private float animTime;
+    private bool playing;
 
-    public bool recording;
-    public float recordingStartTime;
+    private bool recording;
+    private float recordingStartTime;
 
     public Ubiq.XR.HandController handController;
 
     public void Update()
     {
-        if (handController && handController.PrimaryButtonState)
-        {
-            if (!recording)
-            {
-                leftHandPositions.Clear();
-                leftHandRotations.Clear();
-                rightHandPositions.Clear();
-                rightHandRotations.Clear();
-                times.Clear();
-                recording = true;
-                recordingStartTime = Time.time;
-                leftHandIdlePosition = leftHand.localPosition;
-                leftHandIdleRotation = leftHand.localRotation;
-                rightHandIdlePosition = rightHand.localPosition;
-                rightHandIdleRotation = rightHand.localRotation;
-            }
-        }
-        else
-        {
-            recording = false;
-        }
+        // if (handController && handController.PrimaryButtonState)
+        // {
+        //     if (!recording)
+        //     {
+        //         leftHandPositions.Clear();
+        //         leftHandRotations.Clear();
+        //         rightHandPositions.Clear();
+        //         rightHandRotations.Clear();
+        //         times.Clear();
+        //         recording = true;
+        //         recordingStartTime = Time.time;
+        //         leftHandIdlePosition = leftHand.localPosition;
+        //         leftHandIdleRotation = leftHand.localRotation;
+        //         rightHandIdlePosition = rightHand.localPosition;
+        //         rightHandIdleRotation = rightHand.localRotation;
+        //     }
+        // }
+        // else
+        // {
+        //     recording = false;
+        // }
 
-        if (recording)
-        {
-            leftHandPositions.Add(leftHand.localPosition);
-            leftHandRotations.Add(leftHand.localRotation);
-            rightHandPositions.Add(rightHand.localPosition);
-            rightHandRotations.Add(rightHand.localRotation);
-            times.Add(Time.time - recordingStartTime);
-        }
+        // if (recording)
+        // {
+        //     leftHandPositions.Add(leftHand.localPosition);
+        //     leftHandRotations.Add(leftHand.localRotation);
+        //     rightHandPositions.Add(rightHand.localPosition);
+        //     rightHandRotations.Add(rightHand.localRotation);
+        //     times.Add(Time.time - recordingStartTime);
+        // }
 
         var leftHandTargetPosition = leftHandIdlePosition;
         var leftHandTargetRotation = leftHandIdleRotation;
