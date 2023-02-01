@@ -40,7 +40,9 @@ def recognize_from_stdin():
     global chatbot, done, busy, loop
     
     if(chatbot == None):
-        chatbot = Chatbot(api_key="ENTER API KEY HERE")
+        print("Initializing ChatGPT...")
+        chatbot = Chatbot(api_key="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")
+        print("ChatGPT initialized.")
         # # Create a new event loop
         # loop = asyncio.new_event_loop()
         # # Set the event loop as the default
@@ -52,6 +54,7 @@ def recognize_from_stdin():
         if args.preprompt:
             print("Sending preprompt...")
             response = chatbot.ask(args.preprompt)
+            print("Prepromt response received: ", response["choices"][0]["text"].lstrip(), " Ready to receive input.")
             print("Response received. Ready to receive input.")
             # print("> Agent -> Everyone: ", response["choices"][0]["text"].lstrip())
     

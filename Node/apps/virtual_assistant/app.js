@@ -31,6 +31,7 @@ textGeneration.onResponse((data) => {
         // Slice off the leading '>' character
         response = response.slice(1);
         // If the response is not an empty string and does not contain only whitespace
+        // console.log("Raw response: " + response);
         if (response.trim()){
             // The unofficial library we currently use does not return valid JSON. Thereforem, get the answer through regex, by finding the text between {'answer':  and , 'messageId'
             // var answer = response.match(/{'answer': (.*?), 'messageId'/)[1];
@@ -41,6 +42,7 @@ textGeneration.onResponse((data) => {
             response = response.replace(/^\s+/g, '');
             // console.log("Received " + response + ", sending to TTS... for peer " + targetPeer.uuid);
             response = response.replace(/.*->.*: /, ""); // Trim the part of the answer the contains "Agent -> Person: " from the beginning of the answer.
+            // console.log("Sending " + response + " to TTS for peer " + targetPeer.uuid);
             texttospeechservice.processLocalMessage(response, targetPeer);
         }
     }
@@ -54,6 +56,10 @@ transcriptionservice.onResponse((data, peer) => {
         var peerName = peer.uuid;
     }
     var response = data.toString();
+
+    // Remove all newlines from the response
+    response = response.replace(/(\r\n|\n|\r)/gm, "");
+    console.log("Transcription Response: " + response);
     if (response.startsWith(">")){
         response = response.slice(1); // Slice off the leading '>' character
         if (response.trim()){
