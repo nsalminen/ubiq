@@ -16,7 +16,7 @@ namespace Ubiq.Voip
     // samples without encoding/sending. At the moment, mic is never switched
     // off. To complicate matters, C# event thread safety is an issue.
     // TODO What happens when the audio device is changed while listening?
-    public class VoipMicrophoneInput : MonoBehaviour, IAudioSource
+    public class VoipMicrophoneInput : MonoBehaviour, IAudioSource, IAudioStats
     {
         // IAudioSource implementation starts
         // Thread safe and can be called before Awake() and after OnDestroy()
@@ -35,7 +35,7 @@ namespace Ubiq.Voip
         public void ExternalAudioSourceRawSample(AudioSamplingRatesEnum samplingRate, uint durationMilliseconds, short[] sample) => OnAudioSourceRawSample.Invoke(samplingRate,durationMilliseconds,sample);
         // IAudioSource implementation ends
 
-        public AudioClip GetAudioClip() 
+        public AudioClip GetAudioClip()
         {
             return microphoneListener.audioClip;
         }
@@ -133,6 +133,7 @@ namespace Ubiq.Voip
         }
 
         public float gain = 1.0f;
+        public Stats lastFrameStats { get; private set; }
 
         private MicrophoneListener microphoneListener = new MicrophoneListener();
         private G722AudioEncoder audioEncoder = new G722AudioEncoder();
@@ -147,8 +148,6 @@ namespace Ubiq.Voip
         private Queue<Task> mainThreadTasks = new Queue<Task>();
         private TaskCompletionSource<bool> allTaskTcs = new TaskCompletionSource<bool>();
         private readonly object taskLock = new object();
-
-
 
 #if UNITY_ANDROID && !UNITY_EDITOR
         private bool microphoneAuthorized = false;
@@ -210,21 +209,30 @@ namespace Ubiq.Voip
                 task.RunSynchronously();
             }
 
+            var stats = new Stats();
+            stats.sampleRate = 16000;
+
             // Send samples if we have them
             while (microphoneListener.Advance())
             {
                 // TODO pool buffers to avoid runtime GC
                 var pcmSamples = new short[microphoneListener.samples.Length];
+                var volume = 0.0f;
                 for (int i = 0; i < microphoneListener.samples.Length; i++)
                 {
                     var floatSample = microphoneListener.samples[i];
                     floatSample = Mathf.Clamp(floatSample*gain,-.999f,.999f);
                     pcmSamples[i] = (short)(floatSample * short.MaxValue);
+                    volume += Mathf.Abs(floatSample);
                 }
+                stats.samples += microphoneListener.samples.Length;
+                stats.volume += volume;
 
                 var encoded = audioEncoder.Encode(pcmSamples);
                 OnAudioSourceEncodedSample.Invoke((uint)pcmSamples.Length,encoded);
             }
+
+            lastFrameStats = stats;
         }
 
         // Thread-safe task queue - tasks eventually get executed synchronously on

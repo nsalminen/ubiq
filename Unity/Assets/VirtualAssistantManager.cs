@@ -76,7 +76,7 @@ public class VirtualAssistantManager : MonoBehaviour, INetworkComponent
             }
             if (assistantController)
             {
-                var speechTarget = speechTargetName;
+                var speechTarget = null as string;
                 if (speechUnits.Count > 0)
                 {
                     speechTarget = speechUnits[0].speechTargetName;
