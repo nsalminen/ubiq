@@ -37,6 +37,8 @@ namespace Ubiq.Samples
         private float[] volumeFrames;
 
         private IAudioStats injectedStatsSource;
+        private VoipPeerConnectionManager peerConnectionManager;
+
 
         public void InjectStatsSource(IAudioStats stats)
         {
@@ -62,13 +64,14 @@ namespace Ubiq.Samples
         {
             avatar = GetComponentInParent<Avatars.Avatar>();
             voipAvatar = GetComponentInParent<VoipAvatar>();
+            peerConnectionManager = VoipPeerConnectionManager.Find(this);
         }
 
         private void LateUpdate()
         {
-            if (injectedStatsSource == null && (!avatar || avatar.IsLocal || !voipAvatar))
+            if (injectedStatsSource == null && (!avatar || !voipAvatar))
             {
-                if (!avatar || avatar.IsLocal || !voipAvatar)
+                if (!avatar || !voipAvatar)
                 {
                     Hide();
                     enabled = false;
@@ -85,6 +88,11 @@ namespace Ubiq.Samples
             UpdateSamples();
             UpdateIndicators();
             UpdatePosition();
+
+            if (avatar && avatar.IsLocal)
+            {
+                Hide();
+            }
         }
 
         private void UpdateSamples()
@@ -96,17 +104,28 @@ namespace Ubiq.Samples
 
             var volumeWindowSampleCount = 0;
 
-            var tmpStatsSource = injectedStatsSource;
-            if (tmpStatsSource == null)
+            var statsSource = injectedStatsSource;
+            if (statsSource == null)
             {
-                var audioSink = voipAvatar?.peerConnection?.audioSink;
-                if (audioSink != null)
+                if (avatar && avatar.IsLocal)
                 {
-                    tmpStatsSource = audioSink as IAudioStats;
+                    var audioSource = peerConnectionManager?.GetAudioSource();
+                    if (audioSource != null)
+                    {
+                        statsSource = audioSource as IAudioStats;
+                    }
+                }
+                else
+                {
+                    var audioSink = voipAvatar?.peerConnection?.audioSink;
+                    if (audioSink != null)
+                    {
+                        statsSource = audioSink as IAudioStats;
+                    }
                 }
             }
 
-            var stats = tmpStatsSource != null ? tmpStatsSource.lastFrameStats : new Stats();
+            var stats = statsSource != null ? statsSource.lastFrameStats : new Stats();
             currentFrameVolumeSum += stats.volume;
             currentFrameSampleCount += stats.samples;
             volumeWindowSampleCount = (int)(sampleSecondsPerIndicator * stats.sampleRate);
