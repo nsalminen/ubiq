@@ -17,7 +17,7 @@ public class VirtualAssistantController : MonoBehaviour
     public HandMover handMover;
     public float turnSpeed = 10.0f;
 
-    private string assistantSpeechTargetPeerUuid;
+    private string assistantSpeechTargetPeerName;
     private float assistantSpeechVolume;
     private float minAssistantSpeechVolume;
     private float maxAssistantSpeechVolume;
@@ -31,9 +31,9 @@ public class VirtualAssistantController : MonoBehaviour
         this.maxAssistantSpeechVolume = max;
     }
 
-    public void UpdateAssistantSpeechStatus(string targetPeerUuid, float volume)
+    public void UpdateAssistantSpeechStatus(string targetPeerName, float volume)
     {
-        assistantSpeechTargetPeerUuid = targetPeerUuid;
+        assistantSpeechTargetPeerName = targetPeerName;
         assistantSpeechVolume = volume;
     }
 
@@ -60,7 +60,7 @@ public class VirtualAssistantController : MonoBehaviour
 
     void UpdateTurn()
     {
-        if (!string.IsNullOrEmpty(assistantSpeechTargetPeerUuid))
+        if (!string.IsNullOrEmpty(assistantSpeechTargetPeerName))
         {
             if (!roomClient)
             {
@@ -75,13 +75,13 @@ public class VirtualAssistantController : MonoBehaviour
             foreach(var peer in roomClient.Peers)
             {
                 Debug.Log(peer.UUID);
-                if (peer.UUID == assistantSpeechTargetPeerUuid)
+                if (peer["ubiq.samples.social.name"] == assistantSpeechTargetPeerName)
                 {
                     targetPeer = peer;
                     break;
                 }
             }
-            if (roomClient.Me.UUID == assistantSpeechTargetPeerUuid)
+            if (roomClient.Me["ubiq.samples.social.name"] == assistantSpeechTargetPeerName)
             {
                 targetPeer = roomClient.Me;
             }

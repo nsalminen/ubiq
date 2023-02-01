@@ -23,7 +23,7 @@ public class VirtualAssistantManager : MonoBehaviour, INetworkComponent
     public HandMover handMover;
     public VirtualAssistantController assistantController;
 
-    private string speechTargetUuid;
+    private string speechTargetName;
 
     [Serializable]
     private struct Message
@@ -60,7 +60,7 @@ public class VirtualAssistantManager : MonoBehaviour, INetworkComponent
             if (assistantController)
             {
                 assistantController.SetAssistantSpeechVolumeRange(speechIndicator.minVolume,speechIndicator.maxVolume);
-                assistantController.UpdateAssistantSpeechStatus(speechTargetUuid,volume);
+                assistantController.UpdateAssistantSpeechStatus(speechTargetName,volume);
             }
         }
     }
@@ -77,7 +77,7 @@ public class VirtualAssistantManager : MonoBehaviour, INetworkComponent
             try
             {
                 message = data.FromJson<Message>();
-                speechTargetUuid = message.targetPeer;
+                speechTargetName = message.targetPeer;
                 Debug.Log("Received audio for peer: " + message.targetPeer + " with length: " + message.audioLength);
                 return;
             }
