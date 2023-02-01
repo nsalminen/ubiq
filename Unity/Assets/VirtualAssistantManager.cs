@@ -14,6 +14,12 @@ using Ubiq.Samples;
 [NetworkComponentId(typeof(VirtualAssistantManager), ComponentId)]
 public class VirtualAssistantManager : MonoBehaviour, INetworkComponent
 {
+    private class AssistantSpeechUnit
+    {
+        public int samples;
+        public string speechTargetName;
+    }
+
     public const ushort ComponentId = 95;
     public NetworkId networkId = new NetworkId(95);
     private NetworkContext context;
@@ -23,7 +29,9 @@ public class VirtualAssistantManager : MonoBehaviour, INetworkComponent
     public HandMover handMover;
     public VirtualAssistantController assistantController;
 
-    private string speechTargetUuid;
+    private string speechTargetName;
+
+    private List<AssistantSpeechUnit> speechUnits = new List<AssistantSpeechUnit>();
 
     [Serializable]
     private struct Message
@@ -42,6 +50,15 @@ public class VirtualAssistantManager : MonoBehaviour, INetworkComponent
     // Update is called once per frame
     void Update()
     {
+        if (voipAudioSourceOutput && speechUnits.Count > 0)
+        {
+            speechUnits[0].samples -= voipAudioSourceOutput.lastFrameStats.samples;
+            if (speechUnits[0].samples <= 0)
+            {
+                speechUnits.RemoveAt(0);
+            }
+        }
+
         if (speechIndicator)
         {
             speechIndicator.InjectStatsSource(voipAudioSourceOutput);
@@ -59,8 +76,14 @@ public class VirtualAssistantManager : MonoBehaviour, INetworkComponent
             }
             if (assistantController)
             {
+                var speechTarget = null as string;
+                if (speechUnits.Count > 0)
+                {
+                    speechTarget = speechUnits[0].speechTargetName;
+                }
+
                 assistantController.SetAssistantSpeechVolumeRange(speechIndicator.minVolume,speechIndicator.maxVolume);
-                assistantController.UpdateAssistantSpeechStatus(speechTargetUuid,volume);
+                assistantController.UpdateAssistantSpeechStatus(speechTarget,volume);
             }
         }
     }
@@ -77,7 +100,7 @@ public class VirtualAssistantManager : MonoBehaviour, INetworkComponent
             try
             {
                 message = data.FromJson<Message>();
-                speechTargetUuid = message.targetPeer;
+                speechTargetName = message.targetPeer;
                 Debug.Log("Received audio for peer: " + message.targetPeer + " with length: " + message.audioLength);
                 return;
             }
@@ -91,6 +114,11 @@ public class VirtualAssistantManager : MonoBehaviour, INetworkComponent
         {
             return;
         }
+
+        var speechUnit = new AssistantSpeechUnit();
+        speechUnit.samples = data.data.Length/2;
+        speechUnit.speechTargetName = speechTargetName;
+        speechUnits.Add(speechUnit);
 
         voipAudioSourceOutput.InjectAudioPcm(data.data.ToArray());
     }

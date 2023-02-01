@@ -22,7 +22,6 @@ def recognize_from_stdin():
     speech_recognizer = speechsdk.SpeechRecognizer(
         speech_config=speech_config, audio_config=audio_config
     )
-    # print("Azure Speech client ready to receive chunks for peer " + args.peer + ".")
     done = False
 
     # def recognizing_cb(evt: speechsdk.SpeechRecognitionEventArgs):

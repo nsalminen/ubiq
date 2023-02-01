@@ -17,13 +17,15 @@ public class VirtualAssistantController : MonoBehaviour
     public HandMover handMover;
     public float turnSpeed = 10.0f;
 
-    private string assistantSpeechTargetPeerUuid;
+    private string assistantSpeechTargetPeerName;
     private float assistantSpeechVolume;
     private float minAssistantSpeechVolume;
     private float maxAssistantSpeechVolume;
+    private IPeer lastTargetPeer;
 
     private RoomClient roomClient;
     private AvatarManager avatarManager;
+    private VoipPeerConnectionManager peerConnectionManager;
 
     public void SetAssistantSpeechVolumeRange(float min, float max)
     {
@@ -31,9 +33,9 @@ public class VirtualAssistantController : MonoBehaviour
         this.maxAssistantSpeechVolume = max;
     }
 
-    public void UpdateAssistantSpeechStatus(string targetPeerUuid, float volume)
+    public void UpdateAssistantSpeechStatus(string targetPeerName, float volume)
     {
-        assistantSpeechTargetPeerUuid = targetPeerUuid;
+        assistantSpeechTargetPeerName = targetPeerName;
         assistantSpeechVolume = volume;
     }
 
@@ -60,84 +62,112 @@ public class VirtualAssistantController : MonoBehaviour
 
     void UpdateTurn()
     {
-        if (!string.IsNullOrEmpty(assistantSpeechTargetPeerUuid))
+        if (!roomClient)
         {
+            roomClient = NetworkScene.FindNetworkScene(this).GetComponent<RoomClient>();
             if (!roomClient)
             {
-                roomClient = NetworkScene.FindNetworkScene(this).GetComponent<RoomClient>();
-                if (!roomClient)
-                {
-                    return;
-                }
+                return;
             }
+        }
+        if (!avatarManager)
+        {
+            avatarManager = roomClient.GetComponentInChildren<AvatarManager>();
+            if (!avatarManager)
+            {
+                return;
+            }
+        }
 
-            var targetPeer = null as IPeer;
+        var targetPeer = null as IPeer;
+        if (!string.IsNullOrEmpty(assistantSpeechTargetPeerName))
+        {
+            // Speech target specified: find the corresponding peer
             foreach(var peer in roomClient.Peers)
             {
                 Debug.Log(peer.UUID);
-                if (peer.UUID == assistantSpeechTargetPeerUuid)
+                if (peer["ubiq.samples.social.name"] == assistantSpeechTargetPeerName)
                 {
                     targetPeer = peer;
                     break;
                 }
             }
-            if (roomClient.Me.UUID == assistantSpeechTargetPeerUuid)
+            if (roomClient.Me["ubiq.samples.social.name"] == assistantSpeechTargetPeerName)
             {
                 targetPeer = roomClient.Me;
             }
+        }
+        else
+        {
+            var loudestVolume = 0.0f;
+            // No speech target specified: find the loudest current peer
+            foreach(var avatar in avatarManager.Avatars)
+            {
+                var speechIndicator = avatar.GetComponentInChildren<SpeechIndicator>();
+                if (speechIndicator)
+                {
+                    var volume = speechIndicator.EstimateCurrentVolume();
+                    Debug.Log(volume > speechIndicator.minVolume);
+                    if (volume > loudestVolume && volume > speechIndicator.minVolume)
+                    {
+                        targetPeer = avatar.Peer;
+                        loudestVolume = volume;
+                    }
+                }
+            }
+        }
+
+        if (targetPeer == null)
+        {
+            targetPeer = lastTargetPeer;
 
             if (targetPeer == null)
             {
                 return;
             }
-
-            if (!avatarManager)
-            {
-                avatarManager = roomClient.GetComponentInChildren<AvatarManager>();
-                if (!avatarManager)
-                {
-                    return;
-                }
-            }
-
-            var targetAvatar = null as Ubiq.Avatars.Avatar;
-            foreach(var avatar in avatarManager.Avatars)
-            {
-                if (avatar.Peer == targetPeer)
-                {
-                    targetAvatar = avatar;
-                    break;
-                }
-            }
-
-            if (!targetAvatar)
-            {
-                return;
-            }
-
-            var floatingAvatar = targetAvatar.GetComponent<FloatingAvatar>();
-            if (!floatingAvatar)
-            {
-                return;
-            }
-
-            var position = floatingAvatar.head.position;
-
-            var facingDirection = position - transform.position;
-            facingDirection = new Vector3(facingDirection.x, 0, facingDirection.z);
-
-            transform.rotation = Quaternion.Slerp(transform.rotation,
-                Quaternion.LookRotation(facingDirection), turnSpeed * Time.deltaTime);
-
-            // var assistantFloatingAvatar = GetComponent<FloatingAvatar>();
-            // if (!assistantFloatingAvatar)
-            // {
-            //     return;
-            // }
-            // facingDirection = position - transform.position;
-            // var assistantHead = assistantFloatingAvatar.head;
-            // assistantHead.rotation = Quaternion.Slerp(assistantHead.rotation,
-            //     Quaternion.LookRotation(facingDirection,Vector3.up), turnSpeed * Time.deltaTime);
         }
+
+        Debug.Log(targetPeer.UUID);
+
+        var targetAvatar = null as Ubiq.Avatars.Avatar;
+        foreach(var avatar in avatarManager.Avatars)
+        {
+            if (avatar.Peer == targetPeer)
+            {
+                targetAvatar = avatar;
+                break;
+            }
+        }
+
+        if (!targetAvatar)
+        {
+            return;
+        }
+
+        var floatingAvatar = targetAvatar.GetComponent<FloatingAvatar>();
+        if (!floatingAvatar)
+        {
+            return;
+        }
+
+        var position = floatingAvatar.head.position;
+
+        var facingDirection = position - transform.position;
+        facingDirection = new Vector3(facingDirection.x, 0, facingDirection.z);
+
+        transform.rotation = Quaternion.Slerp(transform.rotation,
+            Quaternion.LookRotation(facingDirection), turnSpeed * Time.deltaTime);
+
+        lastTargetPeer = targetPeer;
+
+        // var assistantFloatingAvatar = GetComponent<FloatingAvatar>();
+        // if (!assistantFloatingAvatar)
+        // {
+        //     return;
+        // }
+        // facingDirection = position - transform.position;
+        // var assistantHead = assistantFloatingAvatar.head;
+        // assistantHead.rotation = Quaternion.Slerp(assistantHead.rotation,
+        //     Quaternion.LookRotation(facingDirection,Vector3.up), turnSpeed * Time.deltaTime);
     }
 }

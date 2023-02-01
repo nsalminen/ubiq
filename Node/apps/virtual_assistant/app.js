@@ -31,17 +31,24 @@ textGeneration.onResponse((data) => {
         // Slice off the leading '>' character
         response = response.slice(1);
         // If the response is not an empty string and does not contain only whitespace
+        // console.log("Raw response: " + response);
         if (response.trim()){
-            // The unofficial library we currently use does not return valid JSON. Thereforem, get the answer through regex, by finding the text between {'answer':  and , 'messageId'
-            // var answer = response.match(/{'answer': (.*?), 'messageId'/)[1];
-            // console.log("Answer: " + answer);
-            // answer = answer.slice(1, -1).replace(/\\n/g, ""); // Remove the quotes around the answer by slicing off the first and last character. Also, remove the newline characters.
-
             // Remove leading whitespace from response
             response = response.replace(/^\s+/g, '');
             // console.log("Received " + response + ", sending to TTS... for peer " + targetPeer.uuid);
-            response = response.replace(/.*->.*: /, ""); // Trim the part of the answer the contains "Agent -> Person: " from the beginning of the answer.
-            texttospeechservice.processLocalMessage(response, targetPeer);
+
+            // Split the answer into separate responses with .*->.*:
+            const lines = response.split("\n");
+            for (const line of lines) {
+                if (!line.includes("->")) {
+                    continue;
+                }
+                const parts = line.split("->");
+                const name = parts[1].split(":")[0].trim();
+                const message = parts[1].split(":")[1].trim();
+                console.log("Sending '" + message + "' to TTS for peer with name " + name);
+                texttospeechservice.processLocalMessage(message, name);
+            }
         }
     }
 });
@@ -54,6 +61,10 @@ transcriptionservice.onResponse((data, peer) => {
         var peerName = peer.uuid;
     }
     var response = data.toString();
+
+    // Remove all newlines from the response
+    response = response.replace(/(\r\n|\n|\r)/gm, "");
+    console.log("Transcription Response: " + response);
     if (response.startsWith(">")){
         response = response.slice(1); // Slice off the leading '>' character
         if (response.trim()){

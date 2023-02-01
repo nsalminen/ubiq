@@ -15,11 +15,12 @@ class TextGenerationService {
     }
 
     start(broadcastResults = false) {
-        this.pythonProcess = spawn("python", ["-u", __dirname + "\\text_2_chatgpt_rev.py", "--preprompt", "You are a participant in a multi-party conversation. There can be any amount of people in the room, including you. Your name is 'Agent’. Every response should be prefixed with the speaker’s name, an arrow, the person who is spoken to and a colon (e.g., 'Dizzy Cat -> Agent: …’). If you speak to everyone in the room, use 'Everyone’ as a target. You can only speak from the Agent’s perspective, so your response always starts with 'Agent ->'. Remember each person that speaks to you (these are the people in the room). Wait for someone to start speaking. Do not speak for others, only from the perspective of yourself, Agent. Respond as concisely as possible, but stay polite."]);
+        // this.pythonProcess = spawn("python", ["-u", __dirname + "\\text_2_chatgpt_rev.py", "--preprompt", "You are a participant in a multi-party conversation. There can be any amount of people in the room, including you. Your name is 'Agent’. Every response should be prefixed with the speaker’s name, an arrow, the person who is spoken to and a colon (e.g., 'Dizzy Cat -> Agent: …’). If you speak to everyone in the room, use 'Everyone’ as a target. You can only speak from the Agent’s perspective, so your response always starts with 'Agent ->'. Remember each person that speaks to you (these are the people in the room). Wait for someone to start speaking. Do not speak for others, only from the perspective of yourself, Agent. Respond as concisely as possible, but stay polite."]);
+        this.pythonProcess = spawn("python", ["-u", __dirname + "\\text_2_chatgpt_rev.py", "--preprompt", "You are a participant in a multi-party conversation. You are in a room with Nels and Ben. Your name is Agent. Every response should be prefixed with the speaker’s name, an arrow, the person who is spoken to and a colon (e.g., 'Nels -> Agent: …’). If you speak to everyone in the room, use 'Everyone’ as a target. You can only speak from the Agent’s perspective, so your response always starts with 'Agent ->'. Remember each person that speaks to you (these are the people in the room). Wait for someone to start speaking. Do not speak for others, only from the perspective of yourself, Agent. Respond as concisely as possible, but stay polite."]);
+        // this.pythonProcess = spawn("python", ["-u", __dirname + "\\test_text_2_chatgpt.py"]);
         this.pythonProcess.stdout.on("data", (data) => {
             if (broadcastResults) {
                 var response = data.toString();
-                console.log("Text generated: " + response);
                 if (response.length > 0) {
                     this.sendResponse(response);
                 }

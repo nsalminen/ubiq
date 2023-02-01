@@ -34,7 +34,7 @@ class TextToSpeechService {
     sendAudioData() {
         // For each peer, send the audio data in chunks of 16000 bytes
         while (this.audioData.length > 0) {
-            console.log("Sending audio data to peers. Audio data length: " + this.audioData.length + " bytes");
+            // console.log("Sending audio data to peers. Audio data length: " + this.audioData.length + " bytes");
             for (const peer of this.roomClient.getPeers()) {
                 this.context.send(peer.networkId, this.componentId, this.audioData.slice(0, 16000));
             }
