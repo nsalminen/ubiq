@@ -96,11 +96,17 @@ namespace Ubiq.Samples
 
             var volumeWindowSampleCount = 0;
 
-            var tmpStatsSource = injectedStatsSource != null
-                ? injectedStatsSource
-                : (voipAvatar.peerConnection.audioSink as IAudioStats);
+            var tmpStatsSource = injectedStatsSource;
+            if (tmpStatsSource == null)
+            {
+                var audioSink = voipAvatar?.peerConnection?.audioSink;
+                if (audioSink != null)
+                {
+                    tmpStatsSource = audioSink as IAudioStats;
+                }
+            }
 
-            var stats = tmpStatsSource.lastFrameStats;
+            var stats = tmpStatsSource != null ? tmpStatsSource.lastFrameStats : new Stats();
             currentFrameVolumeSum += stats.volume;
             currentFrameSampleCount += stats.samples;
             volumeWindowSampleCount = (int)(sampleSecondsPerIndicator * stats.sampleRate);
