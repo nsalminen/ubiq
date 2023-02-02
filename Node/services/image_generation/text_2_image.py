@@ -11,7 +11,20 @@ parser = argparse.ArgumentParser()
 parser.add_argument("--model", type=str, default="stabilityai/stable-diffusion-2")
 parser.add_argument("--output_folder", type=str, default="./output")
 parser.add_argument("--prompt_postfix", type=str, default="")
+parser.add_argument("--seamless", type=bool, default=True)
 args = parser.parse_args()
+
+if args.seamless:
+    # Patch torch.nn.Conv2d to create seamless textures (https://github.com/huggingface/diffusers/issues/556#issuecomment-1253772217)
+    def patch_conv(cls):
+        init = cls.__init__
+
+        def __init__(self, *args, **kwargs):
+            return init(self, *args, **kwargs, padding_mode="circular")
+
+        cls.__init__ = __init__
+
+    patch_conv(torch.nn.Conv2d)
 
 queue = []
 pipe = None
@@ -28,7 +41,7 @@ def generateTextureFromPrompt(pipe, generator, prompt):
 
         prompt += args.prompt_postfix
         image = pipe(
-            prompt, guidance_scale=7, num_inference_steps=32, generator=generator
+            prompt, guidance_scale=7, num_inference_steps=24, generator=generator
         ).images[0]
         md5_name = hashlib.md5(image.tobytes()).hexdigest()
         # folder = os.path.dirname(os.path.abspath(__file__))
