@@ -73,6 +73,12 @@ public class TextureGenerationCollector : MonoBehaviour, INetworkComponent
         }
     }
 
+    // public void ScaleTexture(float scaleModifier) {
+    //     foreach (Tuple<GameObject, int> target in currentTargets) {
+    //         target.Item1.GetComponent<Renderer>().materials[target.Item2].mainTextureScale = new Vector2(scale, scale);
+    //     }
+    // }
+
     void LoadPNGFromURL(string url, System.Action<Texture2D> onComplete)
     {
         UnityWebRequest www = UnityWebRequestTexture.GetTexture(url);
