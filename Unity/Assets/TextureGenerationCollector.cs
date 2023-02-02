@@ -86,7 +86,10 @@ public class TextureGenerationCollector : MonoBehaviour, INetworkComponent
             else
             {
                 Texture2D texture = DownloadHandlerTexture.GetContent(www);
-                onComplete(texture);
+                var mmTexture = new Texture2D(texture.width, texture.height, texture.format, true);
+                mmTexture.SetPixelData(texture.GetRawTextureData<byte>(), 0);
+                mmTexture.Apply(true, true);
+                onComplete(mmTexture);
             }
         };
     }
