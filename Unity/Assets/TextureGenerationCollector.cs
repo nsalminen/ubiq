@@ -69,7 +69,7 @@ public class TextureGenerationCollector : MonoBehaviour, INetworkComponent
         // Set the texture of the submeshes of the current targets
         foreach (Tuple<GameObject, int> target in currentTargets) {
             target.Item1.GetComponent<Renderer>().materials[target.Item2].mainTexture = newTexture;
-            target.Item1.GetComponent<Renderer>().materials[target.Item2].mainTextureScale = new Vector2(0.02f, 0.02f);
+            // target.Item1.GetComponent<Renderer>().materials[target.Item2].mainTextureScale = new Vector2(0.02f, 0.02f);
         }
     }
 
