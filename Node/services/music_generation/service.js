@@ -1,7 +1,7 @@
 const { NetworkId, Message } = require("../../ubiq/messaging");
 const spawn = require("child_process").spawn;
 
-class TextToMusicService {
+class MusicGenerationService {
     constructor(scene, broadcastResults = false) {
         this.objectId = new NetworkId(90);
         this.componentId = 90;
@@ -20,8 +20,20 @@ class TextToMusicService {
     start() {
         this.pythonProcess = spawn("python", [
             "-u",
-            "../../services/music_generation/text_to_music.py"
+            "../../services/music_generation/text_2_music.py",
+            "--output_folder",
+            "../../apps/music_generation/data",
+            "--prompt_postfix",
+            "groove, 80s, melodic"
         ]);
+        this.pythonProcess.stdout.on("data", (data) => {
+            if (this.broadcastResults) {
+                var response = data.toString();
+                if (response.split(".").pop() == "mp3") {
+                    this.sendResponse(response);
+                }
+            }
+        });
     }
 
     sendResponse(peer, data) {
@@ -60,5 +72,5 @@ class TextToMusicService {
 }
 
 module.exports = {
-    TextToSpeechService,
+    MusicGenerationService,
 };

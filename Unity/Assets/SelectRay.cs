@@ -70,7 +70,10 @@ namespace Ubiq.XR
 
             // Get HandController in parent
             handController = GetComponentsInParent<MonoBehaviour>().Where(c => c is HandController).FirstOrDefault() as HandController;
-            handController.GripPress.AddListener(listenForCommand);
+            handController.TriggerPress.AddListener(listenForCommand);
+
+            // handController.TriggerPress.AddListener(listenForCommand);
+            // handController.TriggerPress.AddListener(UpdateTeleport);
 
             SelectionLogger = new ApplicationLogEmitter(this);
         }
@@ -113,7 +116,7 @@ namespace Ubiq.XR
         private void ComputeStraightRay()
         {
             teleportLocationValid = false;
-            renderer.sharedMaterial.color = invalidColour;
+            renderer.sharedMaterial.color = validColour;
 
             var positions = new Vector3[2];
 
@@ -131,7 +134,7 @@ namespace Ubiq.XR
                     teleportLocationValid = true;
                 }
 
-                renderer.sharedMaterial.color = collisionColour;
+                // renderer.sharedMaterial.color = collisionColour;
             }
 
             renderer.positionCount = 2;
@@ -140,13 +143,8 @@ namespace Ubiq.XR
             renderer.startWidth = 0.01f;
             renderer.endWidth = 0.01f;
 
-            if (teleportLocationValid)
-            {
-                renderer.sharedMaterial.color = validColour;
-            }
-
             string currentObjectMaterialString = GetSubmeshName(raycasthitinfo);
-            if (currentObjectMaterialString != "" && currentObjectMaterialString != lastSelectedObjectMaterialString)
+            if (currentObjectMaterialString != "")// && currentObjectMaterialString != lastSelectedObjectMaterialString)
             {
                 // textureGenerationCollector.sendSelectedObjectMessage(currentObjectMaterialString);
 
