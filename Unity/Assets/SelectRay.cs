@@ -144,7 +144,7 @@ namespace Ubiq.XR
             renderer.endWidth = 0.01f;
 
             string currentObjectMaterialString = GetSubmeshName(raycasthitinfo);
-            if (currentObjectMaterialString != "" && currentObjectMaterialString != lastSelectedObjectMaterialString)
+            if (currentObjectMaterialString != "")// && currentObjectMaterialString != lastSelectedObjectMaterialString)
             {
                 // textureGenerationCollector.sendSelectedObjectMessage(currentObjectMaterialString);
 
