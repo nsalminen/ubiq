@@ -10,10 +10,8 @@ using System;
 using System.IO;
 using System.Text;
 
-[NetworkComponentId(typeof(TextGenerationCollector), ComponentId)]
-public class TextGenerationCollector : MonoBehaviour, INetworkComponent
+public class TextGenerationCollector : MonoBehaviour
 {
-    public const ushort ComponentId = 96;
     public NetworkId networkId = new NetworkId(96);
     private NetworkContext context;
     public UnityEngine.UI.Text genText;
@@ -29,13 +27,7 @@ public class TextGenerationCollector : MonoBehaviour, INetworkComponent
     // Start is called before the first frame update
     void Start()
     {
-        context = NetworkScene.Register(this);
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
+        context = NetworkScene.Register(this,networkId);
     }
 
     public void ProcessMessage(ReferenceCountedSceneGraphMessage data)
@@ -46,6 +38,6 @@ public class TextGenerationCollector : MonoBehaviour, INetworkComponent
             Debug.Log(str);
             genText.text = str;
         }
-        
+
     }
 }

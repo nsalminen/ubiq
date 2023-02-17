@@ -64,7 +64,7 @@ public class VirtualAssistantController : MonoBehaviour
     {
         if (!roomClient)
         {
-            roomClient = NetworkScene.FindNetworkScene(this).GetComponent<RoomClient>();
+            roomClient = NetworkScene.Find(this).GetComponent<RoomClient>();
             if (!roomClient)
             {
                 return;
@@ -85,7 +85,7 @@ public class VirtualAssistantController : MonoBehaviour
             // Speech target specified: find the corresponding peer
             foreach(var peer in roomClient.Peers)
             {
-                Debug.Log(peer.UUID);
+                Debug.Log(peer.uuid);
                 if (peer["ubiq.samples.social.name"] == assistantSpeechTargetPeerName)
                 {
                     targetPeer = peer;
@@ -103,12 +103,13 @@ public class VirtualAssistantController : MonoBehaviour
             // No speech target specified: find the loudest current peer
             foreach(var avatar in avatarManager.Avatars)
             {
-                var speechIndicator = avatar.GetComponentInChildren<SpeechIndicator>();
-                if (speechIndicator)
+                var volumeEstimator = avatar.GetComponentInChildren<GenieSpeechVolumeEstimator>();
+                if (volumeEstimator)
                 {
-                    var volume = speechIndicator.EstimateCurrentVolume();
-                    Debug.Log(volume > speechIndicator.minVolume);
-                    if (volume > loudestVolume && volume > speechIndicator.minVolume)
+                    var speechIndicator = avatar.GetComponentInChildren<SpeechIndicator>();
+                    var minVolume = speechIndicator ? speechIndicator.minVolume : 0.0f;
+                    var volume = volumeEstimator.EstimateCurrentVolume();
+                    if (volume > loudestVolume && volume > minVolume)
                     {
                         targetPeer = avatar.Peer;
                         loudestVolume = volume;
@@ -127,7 +128,7 @@ public class VirtualAssistantController : MonoBehaviour
             }
         }
 
-        Debug.Log(targetPeer.UUID);
+        Debug.Log(targetPeer.uuid);
 
         var targetAvatar = null as Ubiq.Avatars.Avatar;
         foreach(var avatar in avatarManager.Avatars)

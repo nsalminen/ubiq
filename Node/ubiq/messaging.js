@@ -1,10 +1,10 @@
-const { exception } = require('console');
+const { exception, assert } = require('console');
 const { TextDecoder } = require('util');
 const { Schema } = require('./schema');
 const { performance } = require('perf_hooks');
 const { type } = require('os');
 
-const MESSAGE_HEADER_SIZE = 10;
+const MESSAGE_HEADER_SIZE = 8;
 
 Schema.add({
     id: '/ubiq.messaging.networkid',
@@ -36,6 +36,12 @@ class NetworkId{
             this.b = data.readUInt32LE(4);
             return;
         }
+        if(ArrayBuffer.isView(data)){
+            var view = new Uint32Array(data.buffer);
+            this.a = view[0];
+            this.b = view[1];
+            return;
+        }
         if(typeof(data) == 'object' && data.hasOwnProperty("a") && typeof(data.a) == 'number' && data.hasOwnProperty("b") && typeof(data.b) == 'number'){
             this.a = data.a;
             this.b = data.b;
@@ -45,10 +51,15 @@ class NetworkId{
     }
 
     static Compare(x, y){
+        assert(x !== undefined && y !== undefined);
         return(x.a == y.a && x.b == y.b);
     }
 
     static WriteBuffer(networkId, buffer, offset){
+        if(networkId == undefined){
+            console.error("Undefined networkId when writing " + (new Error().stack));
+            return;
+        }
         buffer.writeUInt32LE(networkId.a, offset + 0);
         buffer.writeUInt32LE(networkId.b, offset + 4);
     }
@@ -67,6 +78,22 @@ class NetworkId{
 
     static Valid(x){
         return x.a != 0 && x.b != 0;
+    }
+
+    static Create(namespace, service){
+        var bytes = Buffer.from(service,'utf8');
+        var id = new NetworkId(namespace);
+        var data = new Uint32Array(2);
+        data[0] = id.a;
+        data[1] = id.b;
+        for(var i = 0; i < bytes.length; i++){
+            if(i % 2 != 0){
+                data[0] = Math.imul(data[0], bytes[i]);
+            }else{
+                data[1] = Math.imul(data[1], bytes[i]);
+            }
+        }
+        return new NetworkId(data);
     }
 
     static Null = new NetworkId(0);
@@ -88,13 +115,12 @@ class Message{
         var msg = new Message();
         msg.buffer = data;
         msg.length = data.readInt32LE(0)
-        msg.objectId = new NetworkId(data.slice(4));
-        msg.componentId = data.readUInt16LE(12)
-        msg.message = data.slice(14);
+        msg.networkId = new NetworkId(data.slice(4));
+        msg.message = data.slice(12);
         return msg;
     }
 
-    static Create(objectId, componentId, message){
+    static Create(networkId, message){
         var msg = new Message();
         
         if(!Buffer.isBuffer(message)){
@@ -109,20 +135,18 @@ class Message{
         var length = message.length + MESSAGE_HEADER_SIZE;
         var buffer = Buffer.alloc(length + 4);
 
-        if(typeof(objectId) == "string"){
-            objectId = new NetworkId(objectId);
+        if(typeof(networkId) == "string"){
+            networkId = new NetworkId(networkId);
         }
 
         buffer.writeInt32LE(length, 0);
-        buffer.writeNetworkId(objectId, 4);
-        buffer.writeInt32LE(componentId, 12);
-        message.copy(buffer, 14);
+        buffer.writeNetworkId(networkId, 4);
+        message.copy(buffer, 12);
 
         var msg = new Message();
         msg.buffer = buffer;
         msg.length = length;
-        msg.componentId = componentId;
-        msg.objectId = objectId;
+        msg.networkId = networkId;
         msg.message = message;
 
         return msg;

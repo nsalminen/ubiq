@@ -8,11 +8,12 @@ using Ubiq.Logging.Utf8Json;
 using Ubiq.Rooms;
 using System;
 using System.Text;
-using Ubiq.Voip;
 using Ubiq.Samples;
+using Ubiq.Voip;
+using Ubiq.Voip.Implementations;
+using Ubiq.Voip.Implementations.Dotnet;
 
-[NetworkComponentId(typeof(VirtualAssistantManager), ComponentId)]
-public class VirtualAssistantManager : MonoBehaviour, INetworkComponent
+public class VirtualAssistantManager : MonoBehaviour
 {
     private class AssistantSpeechUnit
     {
@@ -20,12 +21,11 @@ public class VirtualAssistantManager : MonoBehaviour, INetworkComponent
         public string speechTargetName;
     }
 
-    public const ushort ComponentId = 95;
     public NetworkId networkId = new NetworkId(95);
     private NetworkContext context;
 
-    public VoipAudioSourceOutput voipAudioSourceOutput;
-    public SpeechIndicator speechIndicator;
+    public GenieAudioSourceDotnetVoipSink voipAudioSourceOutput;
+    public GenieSpeechIndicator speechIndicator;
     public HandMover handMover;
     public VirtualAssistantController assistantController;
 
@@ -44,7 +44,7 @@ public class VirtualAssistantManager : MonoBehaviour, INetworkComponent
     // Start is called before the first frame update
     void Start()
     {
-        context = NetworkScene.Register(this);
+        context = NetworkScene.Register(this,networkId);
     }
 
     // Update is called once per frame
@@ -52,7 +52,7 @@ public class VirtualAssistantManager : MonoBehaviour, INetworkComponent
     {
         if (voipAudioSourceOutput && speechUnits.Count > 0)
         {
-            speechUnits[0].samples -= voipAudioSourceOutput.lastFrameStats.samples;
+            speechUnits[0].samples -= 0;//todo voipAudioSourceOutput.lastFrameStats.samples;
             if (speechUnits[0].samples <= 0)
             {
                 speechUnits.RemoveAt(0);

@@ -4,23 +4,5 @@
 EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
-  m_Scenes:
-  - enabled: 0
-    path: Assets/Samples/Single/Questionnaire/Questionnaire.unity
-    guid: 9433118128ab9f84a80f4175b0e14612
-  - enabled: 0
-    path: Assets/Samples/Single/Spawning/Hello World Spawner.unity
-    guid: 9a73397ffd9ce474598cdea3025280ac
-  - enabled: 0
-    path: Assets/Samples/Intro/Scenes/Apartment.unity
-    guid: 64bff52f73c71a844825016cf8111b18
-  - enabled: 1
-    path: Assets/Samples/Applications/TextureGeneration/TextureGeneration.unity
-    guid: e10becaa62c1348b5b99382ea85dd0fd
-  m_configObjects:
-    Unity.XR.Oculus.Settings: {fileID: 11400000, guid: 94853b5e64b20ad4ea201d84aa95b8d9,
-      type: 2}
-    Unity.XR.OpenVR.Settings: {fileID: 11400000, guid: 5a1428b16d224ac44a5b5cfc7281928e,
-      type: 2}
-    com.unity.xr.management.loader_settings: {fileID: 11400000, guid: 6ed61042c7521c8469439103af6e0403,
-      type: 2}
+  m_Scenes: []
+  m_configObjects: {}

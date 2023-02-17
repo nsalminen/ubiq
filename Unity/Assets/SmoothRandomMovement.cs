@@ -103,7 +103,7 @@ public class SmoothRandomMovement : MonoBehaviour
 
     public void listenForCommandRightHand(bool listen) {
 
-        if (isPressedRight) { 
+        if (isPressedRight) {
             if(listen == false)
             {
                 stopPressedRight = true;
@@ -142,7 +142,7 @@ public class SmoothRandomMovement : MonoBehaviour
 
         if (orientation)
         {
-            List<Quaternion> array = new List<Quaternion>(); 
+            List<Quaternion> array = new List<Quaternion>();
 
             if (value.Key.Contains("left"))
             {
@@ -201,17 +201,17 @@ public class SmoothRandomMovement : MonoBehaviour
 
                     // Parse the values as doubles
                     float value1 = float.Parse(values[0]); //this is because the offset of the player
-                    float value2 = float.Parse(values[1]) - rec_head.transform.parent.parent.GetComponent<CameraOffsetter>().cameraYOffset; //that should be removed when we record.
+                    float value2 = float.Parse(values[1]) - rec_head.transform.parent.parent.GetComponent<CameraOffsetter>().cameraOffset; //that should be removed when we record.
                     float value3 = float.Parse(values[2]);
                     array.Add(new Vector3(value1, value2, value3));
                 }
             }
         }
-        
 
-        
+
+
     }
-    
+
 
     private void FixedUpdate()
     {
