@@ -41,7 +41,7 @@ def recognize_from_stdin():
     
     if(chatbot == None):
         print("Initializing ChatGPT...")
-        chatbot = Chatbot(api_key="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")
+        chatbot = Chatbot(api_key="")
         print("ChatGPT initialized.")
         # # Create a new event loop
         # loop = asyncio.new_event_loop()

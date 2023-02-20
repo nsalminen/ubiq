@@ -44,8 +44,8 @@ textGeneration.onResponse((data) => {
                     continue;
                 }
                 const parts = line.split("->");
-                const name = parts[1].split(":")[0].trim();
-                const message = parts[1].split(":")[1].trim();
+                const name = parts[1].split("::")[0].trim();
+                const message = parts[1].split("::")[1].trim();
                 console.log("Sending '" + message + "' to TTS for peer with name " + name);
                 texttospeechservice.processLocalMessage(message, name);
             }
@@ -68,7 +68,7 @@ transcriptionservice.onResponse((data, peer) => {
     if (response.startsWith(">")){
         response = response.slice(1); // Slice off the leading '>' character
         if (response.trim()){
-            console.log(peerName + " -> Agent: " + response);
+            console.log(peerName + " -> Agent:: " + response);
             textGeneration.processLocalMessage(peerName + "-> Agent: " + response);
         }
     }

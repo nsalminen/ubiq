@@ -5,7 +5,8 @@ const spawn = require("child_process").spawn;
 class TargetedTextToSpeechService extends TextToSpeechService {
     constructor(scene, broadcastResults = false) {
         super(scene, broadcastResults);
-        this.targetPeer = null;
+        // Create a queue of peer names to send audio to
+        this.targetPeerQueue = [];
     }
 
     start() {
@@ -35,19 +36,19 @@ class TargetedTextToSpeechService extends TextToSpeechService {
 
     sendAudioInfoHeader(audioLength) {
         // Send the audio info header to the target peer
+        var targetPeer = this.targetPeerQueue.shift();
         for (const peer of this.roomClient.getPeers()) {
-            console.log('send audio info header');
+            console.log('send audio info header. Target peer: ' + targetPeer + ' audio length: ' + audioLength);
             this.context.send(peer.networkId, this.componentId, {
                 type: "AudioInfo",
-                targetPeer: this.targetPeer.uuid,
+                targetPeer: targetPeer,
                 audioLength : audioLength
             });
         }
     }
 
     processLocalMessage(msg, targetPeer = null) {
-        
-        this.targetPeer = targetPeer;
+        this.targetPeerQueue.push(targetPeer);
 
         if (this.pythonProcess) {
             this.pythonProcess.stdin.write(msg + "\n");

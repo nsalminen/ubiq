@@ -33,19 +33,21 @@ busy = False
 done = False
 
 
-def generateTextureFromPrompt(pipe, generator, prompt):
+def generateTextureFromPrompt(pipe, generator, message):
+    print ("Generating texture from prompt")
     global busy
-    prompt = prompt.decode()
-    if prompt != "" and busy == False:
+    message = message.decode()
+    if message != "" and busy == False:
         busy = True
+        # Get dict from JSON string in prompt
+        message = json.loads(message)
+        prompt = message["prompt"]
+        file_name = message["output_file"] + ".png"
 
         prompt += args.prompt_postfix
         image = pipe(
-            prompt, guidance_scale=7, num_inference_steps=24, generator=generator
+            prompt, guidance_scale=7, num_inference_steps=32, generator=generator
         ).images[0]
-        md5_name = hashlib.md5(image.tobytes()).hexdigest()
-        # folder = os.path.dirname(os.path.abspath(__file__))
-        file_name = md5_name + ".png"
         fullpath = os.path.join(args.output_folder, file_name)
         image.save(fullpath)
         print(file_name)

@@ -5,7 +5,7 @@ const { ImageGenerationService } = require("../../services/image_generation/serv
 const { FileServer } = require("../../services/file_server/service");
 const commandRegex =
     /(?:transform|create|make|set|change|turn)(?: the| an| some)? (?:(?:(.*?)?(?:(?: to| into| seem| look| appear|))?(?: like|like a|like an| a)? (.*)))/i;
-var textureTarget = null;
+var textureTarget = {};
 
 const file_server = new FileServer((directory = "data"));
 file_server.start();
@@ -78,9 +78,14 @@ transcriptionService.onResponse((data, peer) => {
                         peer: peer,
                     });
                 }
-                textureGeneration.processLocalMessage(commandMatch[2]);
-            } else {
-                console.log("shit");
+                // If command contains the word texture or pattern, add a suffix to the command to make it more specific
+                if (commandMatch[2].toLowerCase().includes("texture") || commandMatch[2].toLowerCase().includes("pattern")) {
+                    commandMatch[2] += ", seamless, flat texture, video game texture";
+                }
+                // Create target file name based on peer uuid, target object, and current time
+                const time = new Date().getTime();
+                const targetFileName = peer_uuid + "_" + textureTarget + "_" + time;
+                textureGeneration.processLocalMessage(commandMatch[2], targetFileName);
             }
         }
     }
@@ -93,12 +98,13 @@ transcriptionService.onError((err) => {
 textureGeneration.onResponse((data) => {
     console.log(data.toString()); // Here you can do whatever you want with the data
     if (data.includes(".png")) {
+        const [peer_uuid, target, time] = data.split("_");
         for (const peer of textureGeneration.roomClient.getPeers()) {
             textureGeneration.context.send(peer.networkId, textureGeneration.componentId, {
                 type: "TextureGeneration",
-                target: textureTarget,
+                target: target,
                 data: data,
-                peer: "", // TODO: add peer uuid later (not essential for now)
+                peer: peer_uuid, // TODO: add peer uuid later (not essential for now)
             });
         }
     }

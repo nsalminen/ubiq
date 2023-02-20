@@ -25,11 +25,12 @@ class ImageGenerationService {
             "--output_folder",
             "../../apps/texture_generation/data",
             "--prompt_postfix",
-            ", seamless, flat texture, video game texture, 4k"
+            ", 4k"
         ]);
         this.pythonProcess.stdout.on("data", (data) => {
             if (this.broadcastResults) {
                 var response = data.toString();
+                console.log("Received response from python process: " + response)
                 if (response.split(".").pop() == "png") {
                     this.sendResponse(response);
                 }
@@ -67,9 +68,15 @@ class ImageGenerationService {
         );
     }
 
-    processLocalMessage(msg) {
+    processLocalMessage(prompt, output_file) {
+        // Create dictionary from prompt and output_file
+        var msg = JSON.stringify({
+            prompt: prompt,
+            output_file: output_file,
+        });
         if (this.pythonProcess) {
-            this.pythonProcess.stdin.write(msg + "\n");
+            console.log("Sending message to python process: " + msg);
+            this.pythonProcess.stdin.write(msg + "\n")
         }
     }
 
