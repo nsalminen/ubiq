@@ -1,0 +1,11 @@
+{
+    "name": "SpeechToText",
+    "roomGuid": "6765c52b-3ad6-4fb0-9030-2c9a05dc4731",
+    "outputNetworkId": 98,
+    "credentials": {
+        "azureSpeech": {
+            "key": "19a4cf9381c64e97a21b4c7c1be0bcef",
+            "region": "uksouth"
+        }
+    }
+}

@@ -1,10 +1,9 @@
 const { NetworkScene, RoomClient, LogCollector, UbiqTcpConnection } = require("../../ubiq");
-const fs = require("fs");
-const { TranscriptionService } = require("../../services/speech_to_text/service");
+const { SpeechToTextService } = require("../../services/speech_to_text/service");
+const { readConfigFile } = require("../../../Genie/utils");
 
-// Configuration
-eventType = 2;
-roomGuid = "6765c52b-3ad6-4fb0-9030-2c9a05dc4731";
+// Load configuration from config.json with utility function
+const config = readConfigFile("config.json");
 
 // Create a connection to a Server
 const connection = UbiqTcpConnection("localhost", 8005);
@@ -14,16 +13,24 @@ const scene = new NetworkScene();
 scene.addConnection(connection);
 
 // A RoomClient to join a Room
-const roomclient = new RoomClient(scene);
-// const logcollector = new LogCollector(scene);
-const transcriptionservice = new TranscriptionService(scene, broadcastResults = true);
+const roomClient = new RoomClient(scene);
+// A TranscriptionService to transcribe audio coming from peers
+const transcriptionService = new SpeechToTextService(
+    scene,
+    (broadcastOutput = true),
+    (writeOutputToFile = false),
+    config
+);
 
-transcriptionservice.onResponse((data) => {
-    console.log(data.toString());
+// Register a callback for when a child process closes
+transcriptionService.on("close", (code, signal, identifier) => {
+    console.log("Child process " + identifier + " closed with code " + code + " and signal " + signal);
 });
 
-transcriptionservice.onError((err) => {
-    console.log(err.toString());
+// Register a callback for when a child process sends data
+transcriptionService.on("response", (data, identifier) => {
+    console.log("Response from " + identifier + ": " + data.toString());
 });
 
-roomclient.join(roomGuid); // Join by UUID. Use an online generator to create a new one for your experiment.
+// Join by UUID. Use an online generator to create a new one for your application.
+roomClient.join(config.roomGuid);

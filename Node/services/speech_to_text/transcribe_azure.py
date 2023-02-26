@@ -7,12 +7,14 @@ import argparse
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--peer", type=str, default="00000000-0000-0000-0000-000000000000")
+parser.add_argument("--key", type=str, required=True) # Required API key parameter for Azure Speech
+parser.add_argument("--region", type=str, required=True) # Required region parameter for Azure Speech
 args = parser.parse_args()
 
 def recognize_from_stdin():
     speech_config = speechsdk.SpeechConfig(
-        subscription=os.environ.get("SPEECH_KEY"),
-        region=os.environ.get("SPEECH_REGION"),
+        subscription=args.key,
+        region=args.region,
     )
     speech_config.speech_recognition_language = "en-US"
     audioFormat = AudioStreamFormat(16000, 16, 1)
@@ -23,6 +25,8 @@ def recognize_from_stdin():
         speech_config=speech_config, audio_config=audio_config
     )
     done = False
+
+    print("Azure Speech client started receiving chunks. (Press Ctrl+C to stop.")
 
     # def recognizing_cb(evt: speechsdk.SpeechRecognitionEventArgs):
     #     print("RECOGNIZING: {}".format(evt))
@@ -63,4 +67,4 @@ def recognize_from_stdin():
 
 
 recognize_from_stdin()
-print("> Azure Speech client stopped receiving chunks.")
+print("Azure Speech client stopped receiving chunks.")
