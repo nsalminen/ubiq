@@ -15,22 +15,24 @@ scene.addConnection(connection);
 // A RoomClient to join a Room
 const roomClient = new RoomClient(scene);
 // A TranscriptionService to transcribe audio coming from peers
-const transcriptionService = new SpeechToTextService(
-    scene,
-    (broadcastOutput = true),
-    (writeOutputToFile = false),
-    config
-);
+// const transcriptionService = new SpeechToTextService(
+//     scene,
+//     (broadcastOutput = true),
+//     (writeOutputToFile = false),
+//     config
+// );
 
-// Register a callback for when a child process closes
-transcriptionService.on("close", (code, signal, identifier) => {
-    console.log("Child process " + identifier + " closed with code " + code + " and signal " + signal);
-});
+// // Register a callback for when a child process closes
+// transcriptionService.on("close", (code, signal, identifier) => {
+//     console.log("Child process " + identifier + " closed with code " + code + " and signal " + signal);
+// });
 
-// Register a callback for when a child process sends data
-transcriptionService.on("response", (data, identifier) => {
-    console.log("Response from " + identifier + ": " + data.toString());
-});
+// // Register a callback for when a child process sends data
+// transcriptionService.on("response", (data, identifier) => {
+//     console.log("Response from " + identifier + ": " + data.toString());
+// });
+
+
 
 // Join by UUID. Use an online generator to create a new one for your application.
 roomClient.join(config.roomGuid);
