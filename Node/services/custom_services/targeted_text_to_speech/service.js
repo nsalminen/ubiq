@@ -27,7 +27,7 @@ class TargetedTextToSpeechService extends TextToSpeechService {
         while (this.audioData.length > 0) {
             console.log("Sending audio data to peers. Audio data length: " + this.audioData.length + " bytes");
             for (const peer of this.roomClient.getPeers()) {
-                this.context.send(peer.networkId, this.componentId, this.audioData.slice(0, 16000));
+                this.context.send(peer.sceneid, this.componentId, this.audioData.slice(0, 16000));
             }
             this.audioData = this.audioData.slice(16000);
         }
@@ -37,7 +37,7 @@ class TargetedTextToSpeechService extends TextToSpeechService {
         // Send the audio info header to the target peer
         for (const peer of this.roomClient.getPeers()) {
             console.log('send audio info header');
-            this.context.send(peer.networkId, this.componentId, {
+            this.context.send(peer.sceneid, this.componentId, {
                 type: "AudioInfo",
                 targetPeer: this.targetPeer.uuid,
                 audioLength : audioLength

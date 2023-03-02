@@ -38,7 +38,7 @@ class ImageGenerationService {
 
     sendResponse(data) {
         for (const peer of this.roomClient.getPeers()) {
-            this.context.send(peer.networkId, {
+            this.context.send(peer.sceneid, {
                 type: "texture generated",
                 peer: "TODO",
                 data: data,

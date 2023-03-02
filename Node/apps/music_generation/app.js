@@ -78,7 +78,7 @@ transcriptionService.onResponse((data, peer) => {
                 }
 
                 for (const peer of musicGeneration.roomClient.getPeers()) {
-                    musicGeneration.context.send(peer.networkId, musicGeneration.componentId, {
+                    musicGeneration.context.send(peer.sceneid, musicGeneration.componentId, {
                         type: "GenerationStarted",
                         target: musicTarget,
                         data: "",
@@ -101,7 +101,7 @@ musicGeneration.onResponse((data) => {
     console.log(data.toString()); // Here you can do whatever you want with the data
     if (data.includes(".mp3")) {
         for (const peer of musicGeneration.roomClient.getPeers()) {
-            musicGeneration.context.send(peer.networkId, musicGeneration.componentId, {
+            musicGeneration.context.send(peer.sceneid, musicGeneration.componentId, {
                 type: "MusicGeneration",
                 target: musicTarget,
                 data: data,

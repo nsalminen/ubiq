@@ -2,6 +2,7 @@ const { NetworkScene, UbiqTcpConnection } = require("../../ubiq");
 const { RoomClient, LogCollector } = require("../../components");
 const fs = require("fs");
 const { TranscriptionService } = require("../../services/speech_to_text/service");
+const { TranscriptionService } = require("../../services/speech_to_text/service");
 const nconf = require('nconf');
 
 
@@ -14,7 +15,9 @@ eventType = 2;
 roomGuid = "6765c52b-3ad6-4fb0-9030-2c9a05dc4731";
 
 // Create a connection to a Server
-const connection = UbiqTcpConnection("localhost", nconf.get('roomserver:tcp'));
+
+// A NetworkScene
+const scene = new NetworkScene();
 
 // A NetworkScene
 const scene = new NetworkScene();
@@ -27,7 +30,6 @@ const transcriptionservice = new TranscriptionService(scene, broadcastResults = 
 
 transcriptionservice.onResponse((data) => {
     console.log(data.toString());
-});
 
 transcriptionservice.onError((err) => {
     console.log(err.toString());

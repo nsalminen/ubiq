@@ -35,7 +35,7 @@ class TextToSpeechService {
         while (this.audioData.length > 0) {
             // console.log("Sending audio data to peers. Audio data length: " + this.audioData.length + " bytes");
             for (const peer of this.roomClient.getPeers()) {
-                this.context.send(peer.networkId, this.audioData.slice(0, 16000));
+                this.context.send(peer.sceneid, this.audioData.slice(0, 16000));
             }
             this.audioData = this.audioData.slice(16000);
         }
@@ -43,7 +43,7 @@ class TextToSpeechService {
 
     sendResponse(data) {
         for (const peer of this.roomClient.getPeers()) {
-            this.context.send(peer.networkId, {
+            this.context.send(peer.sceneid, {
                 type: "texture generated",
                 peer: "TODO",
                 data: data,
