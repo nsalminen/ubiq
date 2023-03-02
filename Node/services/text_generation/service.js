@@ -29,7 +29,7 @@ class TextGenerationService {
 
     sendResponse(data) {
         for (const peer of this.roomClient.getPeers()) {
-            this.context.send(peer.networkId, { type: "text generated", peer: "TODO", data: data });
+            this.context.send(peer.sceneid, { type: "text generated", peer: "TODO", data: data });
         }
     }
 

@@ -37,7 +37,7 @@ class MusicGenerationService {
 
     sendResponse(peer, data) {
         for (const peer of this.roomClient.getPeers()) {
-            this.context.send(peer.networkId, {
+            this.context.send(peer.sceneid, {
                 type: "recognizedText",
                 peer: peer.uuid,
                 data: data,

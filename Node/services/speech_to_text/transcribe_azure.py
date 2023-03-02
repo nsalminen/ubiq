@@ -14,6 +14,8 @@ def recognize_from_stdin():
         subscription=os.environ.get("SPEECH_KEY"),
         region=os.environ.get("SPEECH_REGION"),
     )
+    print(os.environ.get("SPEECH_KEY"), os.environ.get("SPEECH_REGION"))
+
     speech_config.speech_recognition_language = "en-US"
     audioFormat = AudioStreamFormat(16000, 16, 1)
     custom_push_stream = speechsdk.audio.PushAudioInputStream(stream_format=audioFormat)
@@ -23,6 +25,8 @@ def recognize_from_stdin():
         speech_config=speech_config, audio_config=audio_config
     )
     done = False
+
+    print("Azure Speech client started receiving chunks.")
 
     # def recognizing_cb(evt: speechsdk.SpeechRecognitionEventArgs):
     #     print("RECOGNIZING: {}".format(evt))
