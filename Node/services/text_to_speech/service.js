@@ -1,12 +1,11 @@
-const { NetworkId, Message } = require("../../ubiq/messaging");
+const { NetworkId, Message } = require("../../ubiq");
 const spawn = require("child_process").spawn;
 
 class TextToSpeechService {
     constructor(scene, broadcastResults = false) {
-        this.objectId = new NetworkId(95);
-        this.componentId = 95;
+        this.networkId = new NetworkId(95);
         this.audioData = Buffer.alloc(0);
-        
+
         this.context = scene.register(this);
         this.registerRoomClientEvents();
         this.pythonProcess = null;
@@ -36,7 +35,7 @@ class TextToSpeechService {
         while (this.audioData.length > 0) {
             // console.log("Sending audio data to peers. Audio data length: " + this.audioData.length + " bytes");
             for (const peer of this.roomClient.getPeers()) {
-                this.context.send(peer.networkId, this.componentId, this.audioData.slice(0, 16000));
+                this.context.send(peer.networkId, this.audioData.slice(0, 16000));
             }
             this.audioData = this.audioData.slice(16000);
         }
@@ -44,7 +43,7 @@ class TextToSpeechService {
 
     sendResponse(data) {
         for (const peer of this.roomClient.getPeers()) {
-            this.context.send(peer.networkId, this.componentId, {
+            this.context.send(peer.networkId, {
                 type: "texture generated",
                 peer: "TODO",
                 data: data,

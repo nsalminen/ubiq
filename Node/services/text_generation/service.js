@@ -1,10 +1,9 @@
-const { NetworkId, Message } = require("../../ubiq/messaging");
+const { NetworkId, Message } = require("../../ubiq");
 const spawn = require("child_process").spawn;
 
 class TextGenerationService {
     constructor(scene) {
-        this.objectId = new NetworkId(96);
-        this.componentId = 96;
+        this.networkId = new NetworkId(96);
         this.audioData = Buffer.alloc(0);
 
         this.context = scene.register(this);
@@ -30,7 +29,7 @@ class TextGenerationService {
 
     sendResponse(data) {
         for (const peer of this.roomClient.getPeers()) {
-            this.context.send(peer.networkId, this.componentId, { type: "text generated", peer: "TODO", data: data });
+            this.context.send(peer.networkId, { type: "text generated", peer: "TODO", data: data });
         }
     }
 

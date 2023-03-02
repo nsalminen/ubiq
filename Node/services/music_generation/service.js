@@ -1,11 +1,10 @@
-const { NetworkId, Message } = require("../../ubiq/messaging");
+const { NetworkId, Message } = require("../../ubiq");
 const spawn = require("child_process").spawn;
 
 class MusicGenerationService {
     constructor(scene, broadcastResults = false) {
-        this.objectId = new NetworkId(90);
-        this.componentId = 90;
-        
+        this.networkId = new NetworkId(90);
+
         this.context = scene.register(this);
         this.registerRoomClientEvents();
         this.pythonProcess = null;
@@ -38,7 +37,7 @@ class MusicGenerationService {
 
     sendResponse(peer, data) {
         for (const peer of this.roomClient.getPeers()) {
-            this.context.send(peer.networkId, this.componentId, {
+            this.context.send(peer.networkId, {
                 type: "recognizedText",
                 peer: peer.uuid,
                 data: data,

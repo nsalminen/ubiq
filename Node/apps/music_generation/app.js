@@ -1,8 +1,11 @@
-const { NetworkScene, RoomClient, LogCollector, UbiqTcpConnection } = require("../../ubiq");
+const { NetworkScene, UbiqTcpConnection } = require("../../ubiq");
+const { RoomClient, LogCollector } = require("../../components");
 const fs = require("fs");
 const { TranscriptionService } = require("../../services/speech_to_text/service");
 const { MusicGenerationService } = require("../../services/music_generation/service");
 const { FileServer } = require("../../services/file_server/service");
+const nconf = require('nconf');
+
 const commandRegex =
     /(?:transform|create|make|set|change|turn)(?: the| an| some)? (?:(?:(.*?)?(?:(?: to| into| seem| look| appear|))?(?: like|like a|like an| a)? (.*)))/i;
 var musicTarget = null;
@@ -14,8 +17,12 @@ file_server.start();
 eventType = 1;
 roomGuid = "6765c52b-3ad6-4fb0-9030-2c9a05dc4731";
 
+// Load ubiq config
+nconf.file('local', '../../config/local.json');
+nconf.file('default', '../../config/default.json');
+
 // Create a connection to a Server
-const connection = UbiqTcpConnection("localhost", 8005);
+const connection = UbiqTcpConnection("localhost", nconf.get('roomserver:tcp'));
 
 // A NetworkScene
 const scene = new NetworkScene();
@@ -57,7 +64,7 @@ transcriptionService.onResponse((data, peer) => {
                 console.log("Command recognized");
                 console.log(commandMatch[1], commandMatch[2]);
                 musicTarget = commandMatch[1];
-                
+
                 // Check if audio source target is "this" or "that" or "all of these" or "all of those"
                 if (musicTarget.toLowerCase() == "this" || musicTarget.toLowerCase() == "that") {
                     // If so, we need to retrieve the last selected object by the peer in lastPeerSelection, if it was within the last 10 seconds

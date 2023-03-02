@@ -1,9 +1,15 @@
-const { NetworkScene, RoomClient, LogCollector, UbiqTcpConnection } = require("../../ubiq");
+const { NetworkScene, UbiqTcpConnection } = require("../../ubiq");
+const { RoomClient, LogCollector } = require("../../components");
 const fs = require("fs");
 const { TextToSpeechService } = require("../../services/text_to_speech/service");
 const { TargetedTextToSpeechService } = require("../../services/custom_services/targeted_text_to_speech/service");
 const { TranscriptionService } = require("../../services/speech_to_text/service");
 const { TextGenerationService } = require("../../services/text_generation/service");
+const nconf = require('nconf');
+
+// Load ubiq config
+nconf.file('local', '../../config/local.json');
+nconf.file('default', '../../config/default.json');
 
 // Configuration
 eventType = 2;
@@ -11,7 +17,7 @@ roomGuid = "6765c52b-3ad6-4fb0-9030-2c9a05dc4731";
 postfix = ". Respond in one short sentence."
 
 // Create a connection to a Server
-const connection = UbiqTcpConnection("localhost", 8005);
+const connection = UbiqTcpConnection("localhost", nconf.get('roomserver:tcp'));
 
 // A NetworkScene
 const scene = new NetworkScene();
@@ -72,6 +78,10 @@ transcriptionservice.onResponse((data, peer) => {
             textGeneration.processLocalMessage(peerName + "-> Agent: " + response);
         }
     }
+});
+
+transcriptionservice.onError((err,peer) => {
+    console.log(err.toString());
 });
 
 roomclient.join(roomGuid); // Join by UUID. Use an online generator to create a new one for your experiment.
