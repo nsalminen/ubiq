@@ -100,14 +100,12 @@ transcriptionService.onError((err) => {
 textureGeneration.onResponse((data) => {
     console.log(data.toString()); // Here you can do whatever you want with the data
     if (data.includes(".png")) {
-        for (const peer of textureGeneration.roomClient.getPeers()) {
-            textureGeneration.context.send(peer.sceneid, textureGeneration.componentId, {
-                type: "TextureGeneration",
-                target: textureTarget,
-                data: data,
-                peer: "", // TODO: add peer uuid later (not essential for now)
-            });
-        }
+        textureGeneration.context.send(textureGeneration.networkId, textureGeneration.componentId, {
+            type: "TextureGeneration",
+            target: textureTarget,
+            data: data,
+            peer: "", // TODO: add peer uuid later (not essential for now)
+        });
     }
 });
 
