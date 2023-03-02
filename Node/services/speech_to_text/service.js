@@ -22,13 +22,11 @@ class TranscriptionService {
     }
 
     sendResponse(peer, data) {
-        for (const peer of this.roomClient.getPeers()) {
-            this.context.send(peer.sceneid, {
-                type: "recognizedText",
-                peer: peer.uuid,
-                data: data,
-            });
-        }
+        this.context.send(this.networkId,{
+            type: "recognizedText",
+            peer: peer.uuid,
+            data: data,
+        });
     }
 
     spawnProcessForPeer(peer) {

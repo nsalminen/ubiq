@@ -58,7 +58,7 @@ transcriptionservice.onResponse((data, peer) => {
         console.log(response);
         // texttospeechservice.processLocalMessage(response);
         if (response.trim()){
-            textGeneration.processLocalMessage(response);
+            texttospeechservice.processLocalMessage(response);
         }
     }
 });

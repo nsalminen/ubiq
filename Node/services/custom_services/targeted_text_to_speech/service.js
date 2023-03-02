@@ -26,9 +26,7 @@ class TargetedTextToSpeechService extends TextToSpeechService {
         // For each peer, send the audio data in chunks of 1024 bytes
         while (this.audioData.length > 0) {
             console.log("Sending audio data to peers. Audio data length: " + this.audioData.length + " bytes");
-            for (const peer of this.roomClient.getPeers()) {
-                this.context.send(peer.sceneid, this.componentId, this.audioData.slice(0, 16000));
-            }
+            this.context.send(this.networkId, this.audioData.slice(0, 16000));
             this.audioData = this.audioData.slice(16000);
         }
     }
@@ -46,7 +44,7 @@ class TargetedTextToSpeechService extends TextToSpeechService {
     }
 
     processLocalMessage(msg, targetPeer = null) {
-        
+
         this.targetPeer = targetPeer;
 
         if (this.pythonProcess) {
