@@ -6,7 +6,7 @@ using Ubiq.XR;
 
 public class DesktopServerMicAudioController : MonoBehaviour
 {
-    public GenieMicrophoneCapture microphoneCapture;
+    public MicrophoneCapture microphoneCapture;
 
     private bool desktopMode = false;
 

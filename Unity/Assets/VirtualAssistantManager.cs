@@ -24,9 +24,8 @@ public class VirtualAssistantManager : MonoBehaviour
     public NetworkId networkId = new NetworkId(95);
     private NetworkContext context;
 
-    public GenieAudioSourceDotnetVoipSink voipAudioSourceOutput;
-    public GenieSpeechIndicator speechIndicator;
-    public HandMover handMover;
+    public InjectableAudioSourceDotnetVoipSink voipAudioSourceOutput;
+    public InjectableSpeechIndicator speechIndicator;
     public VirtualAssistantController assistantController;
 
     private string speechTargetName;
@@ -63,17 +62,6 @@ public class VirtualAssistantManager : MonoBehaviour
         {
             speechIndicator.InjectStatsSource(voipAudioSourceOutput);
             var volume = speechIndicator.EstimateCurrentVolume();
-            if (handMover)
-            {
-                if (volume > speechIndicator.minVolume)
-                {
-                    handMover.Play();
-                }
-                else
-                {
-                    handMover.Stop();
-                }
-            }
             if (assistantController)
             {
                 var speechTarget = null as string;

@@ -13,7 +13,7 @@ using Ubiq.Voip;
 using Ubiq.Voip.Implementations;
 using Ubiq.Voip.Implementations.Dotnet;
 
-public class GenieMicrophoneCapture : MonoBehaviour, IPlaybackStatsSource
+public class MicrophoneCapture : MonoBehaviour, IPlaybackStatsSource
 {
     public bool sendToServer = true;
     public float gain = 1.0f;
@@ -41,23 +41,21 @@ public class GenieMicrophoneCapture : MonoBehaviour, IPlaybackStatsSource
     // Update is called once per frame
     void Update()
     {
+        if (!roomClient)
+        {
+            roomClient = NetworkScene.Find(this)?.GetComponentInChildren<RoomClient>();
+            if (!roomClient)
+            {
+                return;
+            }
+        }
+
         if (microphoneInput == null)
         {
-            var scene = NetworkScene.Find(this);
-            if (scene)
+            microphoneInput = roomClient.GetComponentInChildren<IDotnetVoipSource>(includeInactive:true);
+            if (microphoneInput != null)
             {
-                roomClient = scene.GetComponentInChildren<RoomClient>();
-                if (roomClient)
-                {
-                    microphoneInput = scene
-                        .GetComponentInChildren<VoipPeerConnectionManager>()?
-                        .GetComponentInChildren<IDotnetVoipSource>();
-
-                    if (microphoneInput != null)
-                    {
-                        microphoneInput.OnAudioSourceEncodedSample += SendAudioToServer;
-                    }
-                }
+                microphoneInput.OnAudioSourceEncodedSample += SendAudioToServer;
             }
         }
     }
@@ -86,5 +84,9 @@ public class GenieMicrophoneCapture : MonoBehaviour, IPlaybackStatsSource
             // Send the message to the server with a fixed network ID
             context.Send(message);
         }
+    }
+
+    public void ProcessMessage(ReferenceCountedSceneGraphMessage msg)
+    {
     }
 }

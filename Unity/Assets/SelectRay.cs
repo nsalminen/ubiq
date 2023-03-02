@@ -54,7 +54,7 @@ public class SelectRay : MonoBehaviour
     private HandController handController;
 
     public TextureGenerationCollector textureGenerationCollector;
-    public GenieMicrophoneCapture genieMicrophoneCapture;
+    public MicrophoneCapture genieMicrophoneCapture;
 
     private new LineRenderer renderer;
 

@@ -5,7 +5,7 @@ using Ubiq.Avatars;
 using Ubiq.Voip;
 
 // Genie port of SpeechIndicator to add EstimateCurrentVolume()
-public class GenieSpeechVolumeEstimator : MonoBehaviour
+public class SpeechVolumeEstimator : MonoBehaviour
 {
     public float sampleSecondsPerIndicator;
 

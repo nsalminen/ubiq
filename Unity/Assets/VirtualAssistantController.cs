@@ -22,6 +22,7 @@ public class VirtualAssistantController : MonoBehaviour
     private float minAssistantSpeechVolume;
     private float maxAssistantSpeechVolume;
     private IPeer lastTargetPeer;
+    private MicrophoneCapture microphoneCapture;
 
     private RoomClient roomClient;
     private AvatarManager avatarManager;
@@ -101,19 +102,37 @@ public class VirtualAssistantController : MonoBehaviour
         {
             var loudestVolume = 0.0f;
             // No speech target specified: find the loudest current peer
+            if (!microphoneCapture)
+            {
+                microphoneCapture = FindObjectOfType<MicrophoneCapture>();
+            }
+
+            // if (microphoneCapture)
+            // {
+            //     microphoneCapture.lastFrameStats
+            // }
             foreach(var avatar in avatarManager.Avatars)
             {
-                var volumeEstimator = avatar.GetComponentInChildren<GenieSpeechVolumeEstimator>();
-                if (volumeEstimator)
+                var speechIndicator = avatar.GetComponentInChildren<SpeechIndicator>();
+                if (!speechIndicator)
                 {
-                    var speechIndicator = avatar.GetComponentInChildren<SpeechIndicator>();
-                    var minVolume = speechIndicator ? speechIndicator.minVolume : 0.0f;
-                    var volume = volumeEstimator.EstimateCurrentVolume();
-                    if (volume > loudestVolume && volume > minVolume)
-                    {
-                        targetPeer = avatar.Peer;
-                        loudestVolume = volume;
-                    }
+                    return;
+                }
+
+                // Connect volume estimator to speech indicator
+                var volumeEstimator = speechIndicator.GetComponent<SpeechVolumeEstimator>();
+                if (!volumeEstimator)
+                {
+                    volumeEstimator = speechIndicator.gameObject.AddComponent<SpeechVolumeEstimator>();
+                    volumeEstimator.sampleSecondsPerIndicator = speechIndicator.sampleSecondsPerIndicator;
+                }
+
+                var minVolume = speechIndicator ? speechIndicator.minVolume : 0.0f;
+                var volume = volumeEstimator.EstimateCurrentVolume();
+                if (volume > loudestVolume && volume > minVolume)
+                {
+                    targetPeer = avatar.Peer;
+                    loudestVolume = volume;
                 }
             }
         }

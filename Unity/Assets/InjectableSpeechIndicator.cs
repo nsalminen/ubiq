@@ -12,7 +12,7 @@ using Ubiq.Voip.Implementations.Dotnet;
 /// Displays an audio volume indicator for just-played audio samples from
 /// the peer associated with this avatar
 /// </summary>
-public class GenieSpeechIndicator : MonoBehaviour
+public class InjectableSpeechIndicator : MonoBehaviour
 {
     public enum Mode
     {

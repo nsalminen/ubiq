@@ -10,7 +10,7 @@ using Ubiq.Voip.Implementations;
 using Ubiq.Voip.Implementations.Dotnet;
 
 // Genie fork of AudioSourceDotnetVoipSink
-public class GenieAudioSourceDotnetVoipSink : MonoBehaviour, IDotnetVoipSink, IPlaybackStatsSource
+public class InjectableAudioSourceDotnetVoipSink : MonoBehaviour, IDotnetVoipSink, IPlaybackStatsSource
 {
     // IAudioSink implementation starts
     // Thread safe and can be called before Awake() and after OnDestroy()
