@@ -20,46 +20,13 @@ class Service extends EventEmitter {
      * @param {bool} sendResponseToPeers - Whether the response should be broadcast to all peers in the room.
      * @throws {Error} If networkId is undefined.
      */
-    constructor(scene, networkId, name, config = {}) {
+    constructor(scene, name, config = {}) {
         super();
         this.name = name;
         this.config = config;
 
-        if (networkId == undefined) {
-            throw new Error(`NetworkId must be defined for service: ${this.name}`);
-        }
-
-        this.objectId = new NetworkId(networkId);
-        this.componentId = networkId;
-
-        this.context = scene.register(this);
-        this.roomClient = this.context.scene.findComponent("RoomClient"); // The RoomClient can be used to register callbacks including OnPeerJoined, OnPeerLeft, etc.
-
+        this.roomClient = scene.findComponent("RoomClient");
         this.childProcesses = {};
-        this.onResponseCallbacks = [];
-        this.onErrorCallbacks = [];
-    }
-
-    /**
-     * Method to process a local message, commonly called from an Application. This method should be overridden by subclasses.
-     *
-     * @abstract
-     * @param {string} msg - The message to process.
-     * @throws {Error} If not implemented by subclass.
-     */
-    processLocalMessage(msg) {
-        throw new Error(`Process local message not implemented for service: ${this.name}`);
-    }
-
-    /**
-     * Method to process a network message, commonly called from the NetworkScene. This method should be overridden by subclasses.
-     *
-     * @abstract
-     * @param {string} msg - The message to process.
-     * @throws {Error} If not implemented by subclass.
-     */
-    processMessage(msg) {
-        throw new Error(`Process message not implemented for service: ${this.name}`);
     }
 
     /**

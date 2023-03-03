@@ -1,0 +1,23 @@
+const { Readable, EventEmitter } = require('stream');
+const { NetworkId } = require("../Node/ubiq/messaging");
+
+class MessageReader extends EventEmitter {
+    constructor(scene, networkId) {
+        super();
+
+        if (networkId == undefined) {
+            throw new Error(`NetworkId must be defined for service: ${this.name}`);
+        }
+        
+        this.objectId = new NetworkId(networkId);
+        this.componentId = networkId;
+        this.context = scene.register(this);
+    }
+
+    // This method is called when a new chunk of data is available to be read. The msg.message is a Buffer object.
+    processMessage(msg) {
+        this.emit('data', msg);
+    }
+}
+
+module.exports = { MessageReader }
