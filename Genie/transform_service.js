@@ -7,6 +7,7 @@
 const { EventEmitter } = require("stream");
 const { NetworkId } = require("../Node/ubiq/messaging");
 const { Transform } = require("stream");
+const readline = require("readline");
 
 const spawn = require("child_process").spawn;
 
@@ -26,39 +27,18 @@ class TransformService extends Transform {
         this.name = name;
         this.config = config;
 
-        if (networkId == undefined) {
-            throw new Error(`NetworkId must be defined for service: ${this.name}`);
-        }
+        // if (networkId == undefined) {
+        //     throw new Error(`NetworkId must be defined for service: ${this.name}`);
+        // }
 
-        this.objectId = new NetworkId(networkId);
-        this.componentId = networkId;
+        // this.objectId = new NetworkId(networkId);
+        // this.componentId = networkId;
 
         // this.context = scene.register(this);
-        // this.roomClient = this.context.scene.findComponent("RoomClient"); // The RoomClient can be used to register callbacks including OnPeerJoined, OnPeerLeft, etc.
+        this.roomClient = scene.findComponent("RoomClient"); // The RoomClient can be used to register callbacks including OnPeerJoined, OnPeerLeft, etc.
 
         this.childProcesses = {};
-    }
-
-    /**
-     * Method to process a local message, commonly called from an Application. This method should be overridden by subclasses.
-     *
-     * @abstract
-     * @param {string} msg - The message to process.
-     * @throws {Error} If not implemented by subclass.
-     */
-    processLocalMessage(msg) {
-        throw new Error(`Process local message not implemented for service: ${this.name}`);
-    }
-
-    /**
-     * Method to process a network message, commonly called from the NetworkScene. This method should be overridden by subclasses.
-     *
-     * @abstract
-     * @param {string} msg - The message to process.
-     * @throws {Error} If not implemented by subclass.
-     */
-    processMessage(msg) {
-        throw new Error(`Process message not implemented for service: ${this.name}`);
+        this.childProcessReadableInterfaces = {};
     }
 
     /**
@@ -94,23 +74,60 @@ class TransformService extends Transform {
         //     this.emit("close", code, signal, identifier);
         // });
 
-        this.childProcesses[identifier].stdout.on("data", (data) => this.processOutput({ data, identifier }));
+        // this.childProcesses[identifier].stdout.on("data", (data) => this.processOutput({ data, identifier }));
 
         console.log(`Registered child process with identifier: ${identifier} for service: ${this.name}`);
 
         // Check if the child process has already been closed.
         if (this.childProcesses[identifier].killed) {
             delete this.childProcesses[identifier];
-            throw new Error(`Child process with identifier: ${identifier} for service: ${this.name} has already been closed.`);
+            throw new Error(
+                `Child process with identifier: ${identifier} for service: ${this.name} has already been closed.`
+            );
         }
+
+        this.childProcessReadableInterfaces[identifier] = readline.createInterface({
+            input: this.childProcesses[identifier].stdout,
+        });
 
         // Return reference to the child process.
         return this.childProcesses[identifier];
     }
 
     processOutput(data) {
-        console.log(`Service: ${this.name} sending output: ${data}`);
-        this.push(data);
+        console.log(`Service: ${this.name} sending output: ${data.data}`);
+        // this.push(data.data.toString());
+    }
+
+    // This will miss line events that occurred before this is called so this only really works if you know the output comes one line at a time
+    // nextLine(identifier) {
+    //     // Wait for the end message signal to be received from the child process to resolve the promise. The end message is END_MESSAGE.
+    //     response = "";
+    //     return new Promise((resolve, reject) => {
+    //         function addLine(line) {
+    //             if (line == "END_MESSAGE") {
+    //                 this.childProcessReadableInterfaces[identifier].off("line", addLine);
+    //                 resolve(response);
+    //             } else {
+    //                 response += line;
+    //             }
+    //         }
+    //         this.childProcessReadableInterfaces[identifier].on("line", addLine);
+    //     });
+    // }
+
+    readWaitStream(identifier) {
+        return new Promise((resolve, reject) => {
+            let data = "";
+            this.childProcesses[identifier].once("readable", () => {
+                let chunk = "";
+                while ((chunk = this.childProcesses[identifier].read())) {
+                    data += chunk;
+                }
+                console.log(`Service: ${this.name} sending output: ${data}`);
+                resolve(data);
+            });
+        });
     }
 
     /**
@@ -122,18 +139,35 @@ class TransformService extends Transform {
      * @instance
      * @throws {Error} Throws an error if the child process with the specified identifier is not found.
      */
-    sendToChildProcess(identifier, data) {
+    async sendToChildProcess(identifier, data) {
+        function writeToChildProcess(identifier, data) {
+            return new Promise((resolve) => {
+                let ready = this.childProcess[identifier].stdin.write(str, resolve);
+                if (!ready) {
+                    console.log("stream isn't ready yet");
+                }
+            });
+        }
+
         if (this.childProcesses[identifier] == undefined) {
             throw new Error(`Child process with identifier: ${identifier} not found for service: ${this.name}`);
         }
 
-        this.childProcesses[identifier].stdin.write(data);
+        // Wait for the next line to be received from the child process.
+        let response = await this.readWaitStream(identifier);
+
+        // Write the data to the child process.
+        await writeToChildProcess(identifier, data);
+
+        // Wait for the response from the child process.
+        return response;
     }
 
     _transform(chunk, encoding, callback) {
-        console.log(`Service: ${this.name} received message: ${chunk}`);
-        this.sendToChildProcess("default", chunk);
-        callback();
+        console.log(
+            `Service: ${this.name} received data with length ${chunk.data.length} and identifier ${chunk.identifier}`
+        );
+        callback(null, { data: this.sendToChildProcess(chunk.identifier), identifier: chunk.identifier });
     }
 
     /**

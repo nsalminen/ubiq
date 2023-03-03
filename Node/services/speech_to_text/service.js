@@ -1,7 +1,8 @@
 const wav = require("wav");
 const { Service } = require("../../../Genie/service");
+const { TransformService } = require("../../../Genie/transform_service");
 
-class SpeechToTextService extends Service {
+class SpeechToTextService extends TransformService {
     constructor(scene, broadcastOutput = false, writeOutputToFile = false, config = {}) {
         super(scene, 98, "SpeechToText", config);
         this.registerRoomClientEvents();
@@ -22,6 +23,10 @@ class SpeechToTextService extends Service {
                 this.sendResponseToAllPeers(data, identifier);
             });
         }
+
+        // Turn on objectMode
+        this._readableState.objectMode = true;
+        this._writableState.objectMode = true;
     }
 
     // Send a response to all peers in the room
@@ -71,27 +76,27 @@ class SpeechToTextService extends Service {
 
     // Override the default processMessage function to handle audio data.
     // This should later be replaced with a solution that uses NodeJS streams.
-    processMessage(msg) {
-        this.audioData = Buffer.concat([this.audioData, msg.message]);
-        while (this.audioData.length >= 1060) {
-            // Slice the first 36 bytes from the audioData buffer (the peer UUID)
-            const peer_uuid = this.audioData.subarray(0, 36);
+    // processMessage(msg) {
+    //     this.audioData = Buffer.concat([this.audioData, msg.message]);
+    //     while (this.audioData.length >= 1060) {
+    //         // Slice the first 36 bytes from the audioData buffer (the peer UUID)
+    //         const peer_uuid = this.audioData.subarray(0, 36);
 
-            // Slice the next 1024 bytes from the audioData buffer (the audio chunk)
-            const chunk = this.audioData.subarray(36, 1060);
+    //         // Slice the next 1024 bytes from the audioData buffer (the audio chunk)
+    //         const chunk = this.audioData.subarray(36, 1060);
 
-            // Write the chunk to the WAV file if writeOutputToFile is true
-            if (this.writeOutputToFile) {
-                this.writer.write(chunk);
-            }
+    //         // Write the chunk to the WAV file if writeOutputToFile is true
+    //         if (this.writeOutputToFile) {
+    //             this.writer.write(chunk);
+    //         }
 
-            // Remove the data from the audioData buffer
-            this.audioData = this.audioData.subarray(1060);
+    //         // Remove the data from the audioData buffer
+    //         this.audioData = this.audioData.subarray(1060);
 
-            // Send data to the child Python process. We end with a newline character to indicate the end of the message.
-            this.sendToChildProcess(peer_uuid, JSON.stringify(chunk.toJSON()) + "\n");
-        }
-    }
+    //         // Send data to the child Python process. We end with a newline character to indicate the end of the message.
+    //         this.sendToChildProcess(peer_uuid, JSON.stringify(chunk.toJSON()) + "\n");
+    //     }
+    // }
 }
 
 module.exports = {
