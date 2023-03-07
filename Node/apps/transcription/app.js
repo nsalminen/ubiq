@@ -1,36 +1,69 @@
 const { NetworkScene, UbiqTcpConnection } = require("../../ubiq");
-const { RoomClient, LogCollector } = require("../../components");
+const { RoomClient } = require("../../components/roomclient");
+const { SpeechToTextService } = require("../../services/speech_to_text/service");
+const { readConfigFile } = require("../../../Genie/utils");
+const { MessageReader } = require("../../../Genie/message_reader");
 const fs = require("fs");
-const { TranscriptionService } = require("../../services/speech_to_text/service");
-const nconf = require('nconf');
-
+const nconf = require("nconf");
 
 // Load ubiq config
-nconf.file('local', '../../config/local.json');
-nconf.file('default', '../../config/default.json');
+nconf.file("local", "../../config/local.json");
+nconf.file("default", "../../config/default.json");
 
-// Configuration
-eventType = 2;
-roomGuid = "6765c52b-3ad6-4fb0-9030-2c9a05dc4731";
+/**
+ * Load configuration and create a connection to a server
+ **/
+
+// Load configuration from config.json with utility function
+const config = readConfigFile("config.json");
 
 // Create a connection to a Server
-const connection = UbiqTcpConnection("localhost", nconf.get('roomserver:tcp'));
+const connection = UbiqTcpConnection("localhost", nconf.get("roomserver:tcp"));
 
 // A NetworkScene
 const scene = new NetworkScene();
 scene.addConnection(connection);
 
 // A RoomClient to join a Room
-const roomclient = new RoomClient(scene);
-// const logcollector = new LogCollector(scene);
-const transcriptionservice = new TranscriptionService(scene, broadcastResults = true);
+const roomClient = new RoomClient(scene);
 
-transcriptionservice.onResponse((data) => {
-    console.log(data.toString());
+/**
+ * Define services: MessageReader, TranscriptionService, and a file writer
+ **/
+
+// A MessageReader to read audio data from peers based on fixed network ID
+const audioReceiver = new MessageReader(scene, 98);
+
+// A TranscriptionService to transcribe audio coming from peers
+const transcriptionService = new SpeechToTextService(scene, config);
+
+// Define file writer to write transcription output to a file
+const writer = fs.createWriteStream("transcription.txt");
+
+/**
+ * Define application pipeline: audioReceiver -> transcriptionService -> writer
+ * TODO: We currently use EventEmitter to connect services, but we will replace this with a more robust solution in the future (e.g. with streams.pipeline)
+ **/
+
+// Step 1: When we receive audio data from a peer, split it into a peer UUID and audio data, and send it to the transcription service
+audioReceiver.on("data", (data) => {
+    // Split the data into a peer_uuid (36 bytes) and audio data (rest)
+    const peer_uuid = data.message.subarray(0, 36).toString();
+    const audio_data = data.message.subarray(36, 1060);
+
+    // Send the audio data to the transcription service
+    transcriptionService.sendToChildProcess(peer_uuid, JSON.stringify(audio_data.toJSON()) + "\n");
 });
 
-transcriptionservice.onError((err) => {
-    console.log(err.toString());
+// Step 2: When we receive a response from the transcription service, write it to a file
+transcriptionService.on("response", (data, identifier) => {
+    // If data starts with "> ", it is a transcription result. Otherwise, it is a status message.
+    if (data.toString().startsWith(">")) {
+        writer.write(identifier + ": " + data.toString().substring(1));
+    } else {
+        console.log("Child process " + identifier + " sent status message: " + data.toString());
+    }
 });
 
-roomclient.join(roomGuid); // Join by UUID. Use an online generator to create a new one for your experiment.
+// Join room by UUID. Use an online generator to create a new one for your application.
+roomClient.join(config.roomGuid);
