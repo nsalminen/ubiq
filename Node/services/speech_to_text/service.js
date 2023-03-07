@@ -1,4 +1,4 @@
-const { NetworkId, Message } = require("../../ubiq/messaging");
+const { NetworkId, Message } = require("../../ubiq");
 const wav = require("wav");
 const spawn = require("child_process").spawn;
 
@@ -10,8 +10,7 @@ const writer = new wav.FileWriter("audio.wav", {
 
 class TranscriptionService {
     constructor(scene, broadcastResults = false) {
-        this.objectId = new NetworkId(98);
-        this.componentId = 98;
+        this.networkId = new NetworkId(98);
         this.audioData = Buffer.alloc(0);
 
         this.context = scene.register(this);
@@ -19,11 +18,12 @@ class TranscriptionService {
         this.pythonProcesses = [];
         this.broadcastResults = broadcastResults;
         this.onResponseCallbacks = [];
+        this.onErrorCallbacks = [];
     }
 
     sendResponse(peer, data) {
         for (const peer of this.roomClient.getPeers()) {
-            this.context.send(peer.networkId, this.componentId, {
+            this.context.send(peer.networkId, {
                 type: "recognizedText",
                 peer: peer.uuid,
                 data: data,
@@ -57,6 +57,10 @@ class TranscriptionService {
         // Register the new peer's process with all existing callbacks
         for (let i = 0; i < this.onResponseCallbacks.length; i++) {
             this.pythonProcesses[peer.uuid].stdout.on("data", (data) => this.onResponseCallbacks[i](data, peer));
+        }
+
+        for (let i = 0; i < this.onErrorCallbacks.length; i++) {
+            this.pythonProcesses[peer.uuid].stdout.on("error", (err) => this.onResponseCallbacks[i](err, peer));
         }
     }
 
@@ -121,8 +125,10 @@ class TranscriptionService {
 
     onError(cb) {
         for (const peer of this.roomClient.getPeers()) {
-            this.pythonProcesses[peer.uuid].stdout.on("data", (data) => cb(data, peer));
+            this.pythonProcesses[peer.uuid].stdout.on("error", (err) => cb(err, peer));
         }
+
+        this.onErrorCallbacks.push(cb);
     }
 }
 

@@ -1,10 +1,9 @@
-const { NetworkId, Message } = require("../../ubiq/messaging");
+const { NetworkId, Message } = require("../../ubiq");
 const spawn = require("child_process").spawn;
 
 class ImageGenerationService {
     constructor(scene, broadcastResults = false) {
-        this.objectId = new NetworkId(97);
-        this.componentId = 97;
+        this.networkId = new NetworkId(97);
         this.audioData = Buffer.alloc(0);
 
         this.context = scene.register(this);
@@ -40,7 +39,7 @@ class ImageGenerationService {
 
     sendResponse(data) {
         for (const peer of this.roomClient.getPeers()) {
-            this.context.send(peer.networkId, this.componentId, {
+            this.context.send(peer.sceneid, {
                 type: "texture generated",
                 peer: "TODO",
                 data: data,

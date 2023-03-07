@@ -12,10 +12,8 @@ using System.Text;
 using UnityEngine.Networking;
 using Ubiq.XR;
 
-[NetworkComponentId(typeof(TextureGenerationCollector), ComponentId)]
-public class TextureGenerationCollector : MonoBehaviour, INetworkComponent
+public class TextureGenerationCollector : MonoBehaviour
 {
-    public const ushort ComponentId = 97;
     public NetworkId networkId = new NetworkId(97);
     private NetworkContext context;
     private RoomClient client;
@@ -55,14 +53,8 @@ public class TextureGenerationCollector : MonoBehaviour, INetworkComponent
     // Start is called before the first frame update
     void Start()
     {
-        context = NetworkScene.Register(this);
+        context = NetworkScene.Register(this,networkId);
         client = GetComponentInParent<RoomClient>();
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
     }
 
     private void SetTexture(Texture2D newTexture) {
@@ -169,7 +161,7 @@ public class TextureGenerationCollector : MonoBehaviour, INetworkComponent
         //     Debug.Log("No target found for " + message.target);
         // }
     }
-    
+
     public void ProcessMessage(ReferenceCountedSceneGraphMessage data)
     {
         Message message = data.FromJson<Message>();

@@ -1,8 +1,11 @@
-const { NetworkScene, RoomClient, LogCollector, UbiqTcpConnection } = require("../../ubiq");
+const { NetworkScene, UbiqTcpConnection } = require("../../ubiq");
+const { RoomClient, LogCollector } = require("../../components");
 const fs = require("fs");
 const { TranscriptionService } = require("../../services/speech_to_text/service");
 const { ImageGenerationService } = require("../../services/image_generation/service");
 const { FileServer } = require("../../services/file_server/service");
+const nconf = require('nconf');
+
 const commandRegex =
     /(?:transform|create|make|set|change|turn)(?: the| an| some)? (?:(?:(.*?)?(?:(?: to| into| seem| look| appear|))?(?: like|like a|like an| a)? (.*)))/i;
 var textureTarget = {};
@@ -10,12 +13,16 @@ var textureTarget = {};
 const file_server = new FileServer((directory = "data"));
 file_server.start();
 
+// Load ubiq config
+nconf.file('local', '../../config/local.json');
+nconf.file('default', '../../config/default.json');
+
 // Configuration
 eventType = 1;
 roomGuid = "6765c52b-3ad6-4fb0-9030-2c9a05dc4731";
 
 // Create a connection to a Server
-const connection = UbiqTcpConnection("localhost", 8005);
+const connection = UbiqTcpConnection("localhost", nconf.get('roomserver:tcp'));
 
 // A NetworkScene
 const scene = new NetworkScene();
@@ -57,7 +64,7 @@ transcriptionService.onResponse((data, peer) => {
                 console.log("Command recognized");
                 console.log(commandMatch[1], commandMatch[2]);
                 textureTarget = commandMatch[1];
-                
+
                 // Check if texture target is "this" or "that" or "all of these" or "all of those"
                 if (textureTarget.toLowerCase() == "this" || textureTarget.toLowerCase() == "that") {
                     // If so, we need to retrieve the last selected object by the peer in lastPeerSelection, if it was within the last 10 seconds
@@ -70,14 +77,13 @@ transcriptionService.onResponse((data, peer) => {
                     }
                 }
 
-                for (const peer of textureGeneration.roomClient.getPeers()) {
-                    textureGeneration.context.send(peer.networkId, textureGeneration.componentId, {
-                        type: "GenerationStarted",
-                        target: textureTarget,
-                        data: "",
-                        peer: peer,
-                    });
-                }
+                textureGeneration.context.send(textureGeneration.networkId, {
+                    type: "GenerationStarted",
+                    target: textureTarget,
+                    data: "",
+                    peer: peer,
+                });
+
                 // If command contains the word texture or pattern, add a suffix to the command to make it more specific
                 if (commandMatch[2].toLowerCase().includes("texture") || commandMatch[2].toLowerCase().includes("pattern")) {
                     commandMatch[2] += ", seamless, flat texture, video game texture";
@@ -85,6 +91,7 @@ transcriptionService.onResponse((data, peer) => {
                 // Create target file name based on peer uuid, target object, and current time
                 const time = new Date().getTime();
                 const targetFileName = peer_uuid + "_" + textureTarget + "_" + time;
+                console.log("Sending command to texture generation service: " + commandMatch[2] + " with target file name: " + targetFileName)
                 textureGeneration.processLocalMessage(commandMatch[2], targetFileName);
             }
         }
@@ -99,14 +106,14 @@ textureGeneration.onResponse((data) => {
     console.log(data.toString()); // Here you can do whatever you want with the data
     if (data.includes(".png")) {
         const [peer_uuid, target, time] = data.split("_");
-        for (const peer of textureGeneration.roomClient.getPeers()) {
-            textureGeneration.context.send(peer.networkId, textureGeneration.componentId, {
-                type: "TextureGeneration",
-                target: target,
-                data: data,
-                peer: peer_uuid, // TODO: add peer uuid later (not essential for now)
-            });
-        }
+        // for (const peer of textureGeneration.roomClient.getPeers()) {
+        textureGeneration.context.send(textureGeneration.networkId, {
+            type: "TextureGeneration",
+            target: target,
+            data: data,
+            peer: peer_uuid, // TODO: add peer uuid later (not essential for now)
+        });
+        // }
     }
 });
 

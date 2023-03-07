@@ -6,8 +6,9 @@ using Ubiq.XR;
 
 public class DesktopServerMicAudioController : MonoBehaviour
 {
-    public VoipPeerConnectionManager voipPeerConnectionManager;
-    public bool desktopMode = false;
+    public MicrophoneCapture microphoneCapture;
+
+    private bool desktopMode = false;
 
     private HandController[] handControllers;
 
@@ -50,6 +51,6 @@ public class DesktopServerMicAudioController : MonoBehaviour
 
     public void listenForCommand(bool listen)
     {
-        voipPeerConnectionManager.triggerSendingAudioToServer = listen;
+        microphoneCapture.gain = listen ? 1 : 0;
     }
 }

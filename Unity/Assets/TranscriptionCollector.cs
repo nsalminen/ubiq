@@ -9,13 +9,10 @@ using Ubiq.Rooms;
 using System;
 using System.Text;
 
-[NetworkComponentId(typeof(TranscriptionCollector), ComponentId)]
-public class TranscriptionCollector : MonoBehaviour, INetworkComponent
+public class TranscriptionCollector : MonoBehaviour
 {
-    public const ushort ComponentId = 98;
     public NetworkId networkId = new NetworkId(98);
     private NetworkContext context;
-
 
     [Serializable]
     private struct Message
@@ -28,13 +25,13 @@ public class TranscriptionCollector : MonoBehaviour, INetworkComponent
     // Start is called before the first frame update
     void Start()
     {
-        context = NetworkScene.Register(this);
+        context = NetworkScene.Register(this,networkId);
     }
 
     // Update is called once per frame
     void Update()
     {
-        
+
     }
 
     public void ProcessMessage(ReferenceCountedSceneGraphMessage data)
