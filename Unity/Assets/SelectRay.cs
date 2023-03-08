@@ -31,6 +31,10 @@ public class GenieLogEmitter : LogEmitter
 [RequireComponent(typeof(LineRenderer))]
 public class SelectRay : MonoBehaviour
 {
+    private NetworkContext context;
+    private RoomClient roomClient;
+    public NetworkId networkId = new NetworkId(93);
+
     [Serializable]
     public class TeleportEvent : UnityEvent<Vector3>
     { }
@@ -79,6 +83,8 @@ public class SelectRay : MonoBehaviour
 
     private void Start()
     {
+        context = NetworkScene.Register(this, networkId);
+
         foreach (IPrimaryButtonProvider item in GetComponentsInParent<MonoBehaviour>().Where(c => c is IPrimaryButtonProvider))
         {
             item.PrimaryButtonPress.AddListener(UpdateTeleport);
@@ -118,6 +124,24 @@ public class SelectRay : MonoBehaviour
         }
     }
 
+    private void SendCurrentSelection(string currentObjectMaterialString)
+    {
+        byte[] materialStringByte = System.Text.Encoding.UTF8.GetBytes(currentObjectMaterialString);
+
+        // Get the client UUID
+        byte[] clientUUID = System.Text.Encoding.UTF8.GetBytes(roomClient.Me.uuid);
+
+        // Create a message that fits the client UUID and the string
+        var message = ReferenceCountedSceneGraphMessage.Rent(materialStringByte.Length + clientUUID.Length);
+
+        // Copy the client UUID and the string into the message
+        clientUUID.CopyTo(new Span<byte>(message.bytes, message.start, clientUUID.Length));
+        materialStringByte.CopyTo(new Span<byte>(message.bytes, message.start + clientUUID.Length, materialStringByte.Length));
+
+        // Send the message to the server with a fixed network ID
+        context.Send(message);
+    }
+
     private void Update()
     {
         if (isTeleporting)
@@ -128,6 +152,15 @@ public class SelectRay : MonoBehaviour
         else
         {
             renderer.enabled = false;
+        }
+
+        if (!roomClient)
+        {
+            roomClient = NetworkScene.Find(this)?.GetComponentInChildren<RoomClient>();
+            if (!roomClient)
+            {
+                return;
+            }
         }
     }
 
@@ -166,7 +199,9 @@ public class SelectRay : MonoBehaviour
         {
             // textureGenerationCollector.sendSelectedObjectMessage(currentObjectMaterialString);
 
-            SelectionLogger.Log(currentObjectMaterialString);
+            // SelectionLogger.Log(currentObjectMaterialString);
+            // context.Send(currentObjectMaterialString);
+            SendCurrentSelection(currentObjectMaterialString);
             lastSelectedObjectMaterialString = currentObjectMaterialString;
         }
     }
@@ -204,5 +239,10 @@ public class SelectRay : MonoBehaviour
             }
         }
         return "";
+    }
+
+    // We only send messages to the server, so we don't need to implement this method
+    public void ProcessMessage(ReferenceCountedSceneGraphMessage msg)
+    {
     }
 }
