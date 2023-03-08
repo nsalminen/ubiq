@@ -18,7 +18,7 @@ public class TranscriptionCollector : MonoBehaviour
     private struct Message
     {
         public string type;
-        public string peer; // TODO: implement the source peer of this text
+        public string peer;
         public string data;
     }
 
