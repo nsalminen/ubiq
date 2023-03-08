@@ -25,6 +25,7 @@ class FileServer {
         this.port = port;
         this.prefix = prefix;
         this.app = express();
+        this.start();
     }
 
     start() {
@@ -32,6 +33,10 @@ class FileServer {
         this.app.listen(this.port, () => {
             console.log(`File server listening on port ${this.port} and serving files from ${this.directory}!`);
         });
+    }
+
+    stop() {
+        this.app.close();
     }
 }
 

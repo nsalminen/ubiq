@@ -3,7 +3,7 @@ const { Service } = require("../../../Genie/service");
 
 class SpeechToTextService extends Service {
     constructor(scene, config = {}) {
-        super(scene, "SpeechToText", config);
+        super(scene, "SpeechToTextService", config);
         this.registerRoomClientEvents();
     }
 
