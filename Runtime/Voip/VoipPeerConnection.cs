@@ -3,26 +3,15 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
 using Ubiq.Messaging;
+using Ubiq.Logging;
+using Ubiq.Voip.Factory;
 using Ubiq.Voip.Implementations;
 
 namespace Ubiq.Voip
 {
     public class VoipPeerConnection : MonoBehaviour
     {
-        private class PeerConnectionContext : IPeerConnectionContext
-        {
-            MonoBehaviour IPeerConnectionContext.behaviour => (MonoBehaviour)peerConnection;
-            void IPeerConnectionContext.Send(string json) => peerConnection.SendFromImpl(json);
-
-            private VoipPeerConnection peerConnection;
-
-            public PeerConnectionContext (VoipPeerConnection peerConnection)
-            {
-                this.peerConnection = peerConnection;
-            }
-        }
-
-        // Defined here as well as in IPeerConnectionImpl for external use
+        // Defined here as well as in Impl for external use
         public enum IceConnectionState
         {
             closed = 0,
@@ -30,11 +19,10 @@ namespace Ubiq.Voip
             disconnected = 2,
             @new = 3,
             checking = 4,
-            connected = 5,
-            completed = 6
+            connected = 5
         }
 
-        // Defined here as well as in IPeerConnectionImpl for external use
+        // Defined here as well as in Impl for external use
         public enum PeerConnectionState
         {
             closed = 0,
@@ -45,47 +33,40 @@ namespace Ubiq.Voip
             connected = 5
         }
 
-        // Defined here as well as in IPeerConnectionImpl for external use
-        [Serializable]
-        public struct AudioStats : IEquatable<AudioStats>
+        public enum PeerSignallingState : int
         {
-            [field: SerializeField] public int sampleCount { get; private set; }
-            [field: SerializeField] public float volumeSum { get; private set; }
-            [field: SerializeField] public int sampleRate { get; private set; }
+            stable = 0,
+            have_local_offer = 1,
+            have_remote_offer = 2,
+            have_local_pranswer = 3,
+            have_remote_pranswer = 4,
+            closed = 5
+        }
 
-            public AudioStats(int sampleCount, float volumeSum, int sampleRate)
-            {
-                this.sampleCount = sampleCount;
-                this.volumeSum = volumeSum;
-                this.sampleRate = sampleRate;
-            }
+        // Defined here as well as in Impl for external use
+        public struct PlaybackStats
+        {
+            public int samples;
+            public float volume;
+            public int sampleRate;
+        }
 
-            public override bool Equals(object obj)
-            {
-                return obj is AudioStats stats && Equals(stats);
-            }
+        public struct SessionStatistics
+        {
+            public uint PacketsSent;
+            public uint BytesSent;
+            public uint PacketsRecieved;
+            public uint BytesReceived;
+        }
 
-            public bool Equals(AudioStats other)
-            {
-                return sampleCount == other.sampleCount &&
-                       volumeSum == other.volumeSum &&
-                       sampleRate == other.sampleRate;
-            }
-
-            public override int GetHashCode()
-            {
-                return HashCode.Combine(sampleCount, volumeSum, sampleRate);
-            }
-
-            public static bool operator ==(AudioStats left, AudioStats right)
-            {
-                return left.Equals(right);
-            }
-
-            public static bool operator !=(AudioStats left, AudioStats right)
-            {
-                return !(left == right);
-            }
+        /// <summary>
+        /// Summarises the throughput for different sessions in this connection.
+        /// This is returned when the statistics are polled from this peer connection.
+        /// </summary>
+        public struct TransmissionStats
+        {
+            public SessionStatistics Audio;
+            public SessionStatistics Video;
         }
 
         public string PeerUuid { get; private set; }
@@ -94,18 +75,13 @@ namespace Ubiq.Voip
 
         public IceConnectionState iceConnectionState { get; private set; } = IceConnectionState.@new;
         public PeerConnectionState peerConnectionState { get; private set; } = PeerConnectionState.@new;
+        public PeerSignallingState peerSignallingState { get; private set; } = PeerSignallingState.stable;
 
         [Serializable] public class IceConnectionStateEvent : UnityEvent<IceConnectionState> { }
         [Serializable] public class PeerConnectionStateEvent : UnityEvent<PeerConnectionState> { }
 
         public IceConnectionStateEvent OnIceConnectionStateChanged = new IceConnectionStateEvent();
         public PeerConnectionStateEvent OnPeerConnectionStateChanged = new PeerConnectionStateEvent();
-
-        // C# events rather than Unity events as these will be potentially be
-        // called multiple times every frame, and Unity events are slow by
-        // comparison (https://www.jacksondunstan.com/articles/3335)
-        public event Action<AudioStats> playbackStatsPushed;
-        public event Action<AudioStats> recordStatsPushed;
 
         private NetworkId networkId;
         private NetworkScene networkScene;
@@ -127,6 +103,33 @@ namespace Ubiq.Voip
             }
         }
 
+        // todo-remotepeer just take relative co-ords
+        // public void SetRemotePeerPosition(Vector3 worldPosition, Quaternion worldRotation)
+        // {
+        //     if (!networkScene)
+        //     {
+        //         return;
+        //     }
+
+        //     var avatarManager = networkScene.GetComponentInChildren<Ubiq.Avatars.AvatarManager>();
+        //     if (!avatarManager)
+        //     {
+        //         return;
+        //     }
+
+        //     var localVoipAvatar = avatarManager.LocalAvatar.GetComponent<Ubiq.Avatars.VoipAvatar>();
+        //     if (!localVoipAvatar)
+        //     {
+        //         return;
+        //     }
+
+        //     var listener = localVoipAvatar.audioSourcePosition;
+        //     var relativePosition = listener.InverseTransformPoint(worldPosition);
+        //     var relativeRotation = Quaternion.Inverse(listener.rotation) * worldRotation;
+
+        //     impl.SetRemotePeerRelativePosition(relativePosition,relativeRotation);
+        // }
+
         public void UpdateSpatialization(Vector3 sourcePosition,
             Quaternion sourceRotation, Vector3 listenerPosition,
             Quaternion listenerRotation)
@@ -134,6 +137,30 @@ namespace Ubiq.Voip
             impl.UpdateSpatialization(sourcePosition,sourceRotation,
                 listenerPosition,listenerRotation);
         }
+
+        // todo
+//         public VoipAudioSourceOutput.Stats GetLastFrameStats ()
+//         {
+// #if UNITY_WEBGL && !UNITY_EDITOR
+//             if (impl != null)
+//             {
+//                 return impl.GetStats();
+//             }
+//             else
+//             {
+//                 return new VoipAudioSourceOutput.Stats {samples = 0, volume = 0};
+//             }
+// #else
+//             if (audioSink)
+//             {
+//                 return audioSink.lastFrameStats;
+//             }
+//             else
+//             {
+//                 return new VoipAudioSourceOutput.Stats {samples = 0, volume = 0};
+//             }
+// #endif
+//         }
 
         public void Setup (NetworkId networkId, NetworkScene scene,
             string peerUuid, bool polite, List<IceServerDetails> iceServers)
@@ -150,11 +177,14 @@ namespace Ubiq.Voip
 
             this.impl = PeerConnectionImplFactory.Create();
 
+            impl.signallingMessageEmitted += OnImplMessageEmitted;
+            impl.iceConnectionStateChanged += OnImplIceConnectionStateChanged;
+            impl.peerConnectionStateChanged += OnImplPeerConnectionStateChanged;
+            impl.peerSignallingStateChanged += OnImplPeerSignallingStateChanged;
+
             networkScene.AddProcessor(networkId, ProcessMessage);
 
-            impl.Setup(new PeerConnectionContext(this),polite,iceServers,
-                Impl_PlaybackStatsPushed,Impl_RecordStatsPushed,
-                Impl_IceConnectionStateChanged,Impl_PeerConnectionStateChanged);
+            impl.Setup(this,polite,iceServers);
             isSetup = true;
         }
 
@@ -162,40 +192,76 @@ namespace Ubiq.Voip
         {
             if (impl != null)
             {
-                impl.ProcessSignalingMessage(data.ToString());
+                var message = data.FromJson<SignallingMessage>();
+                impl.ProcessSignallingMessage(message);
             }
         }
 
-        private void SendFromImpl(string json)
+        private void OnImplMessageEmitted (SignallingMessage message)
         {
-            networkScene.Send(networkId,json);
+            networkScene.SendJson(networkId,message);
         }
 
-        private static AudioStats ConvertStats(Implementations.AudioStats stats)
-        {
-            return new AudioStats(stats.sampleCount,stats.volumeSum,stats.sampleRate);
-        }
-
-        private void Impl_PlaybackStatsPushed (Implementations.AudioStats stats)
-        {
-            playbackStatsPushed?.Invoke(ConvertStats(stats));
-        }
-
-        private void Impl_RecordStatsPushed (Implementations.AudioStats stats)
-        {
-            recordStatsPushed?.Invoke(ConvertStats(stats));
-        }
-
-        private void Impl_IceConnectionStateChanged (Implementations.IceConnectionState state)
+        private void OnImplIceConnectionStateChanged (Ubiq.Voip.Implementations.IceConnectionState state)
         {
             iceConnectionState = (IceConnectionState)state;
             OnIceConnectionStateChanged.Invoke((IceConnectionState)state);
         }
 
-        private void Impl_PeerConnectionStateChanged (Implementations.PeerConnectionState state)
+        private void OnImplPeerConnectionStateChanged (Ubiq.Voip.Implementations.PeerConnectionState state)
         {
             peerConnectionState = (PeerConnectionState)state;
             OnPeerConnectionStateChanged.Invoke((PeerConnectionState)state);
+        }
+
+        private void OnImplPeerSignallingStateChanged(Implementations.PeerSignallingState state)
+        {
+            peerSignallingState = (PeerSignallingState)state;
+        }
+
+        /// <summary>
+        /// Poll this PeerConnection for statistics about its bandwidth usage.
+        /// </summary>
+        /// <remarks>
+        /// This information is also available through RTCP Reports. This method allows the statistics to be polled,
+        /// rather than wait for a report. If this method is not never called, there is no performance overhead.
+        /// </remarks>
+        public TransmissionStats GetTransmissionStats()
+        {
+            TransmissionStats report = new TransmissionStats();
+            //todo
+
+            // if (rtcPeerConnection != null)
+            // {
+            //     if (rtcPeerConnection.AudioRtcpSession != null)
+            //     {
+            //         report.Audio.PacketsSent = rtcPeerConnection.AudioRtcpSession.PacketsSentCount;
+            //         report.Audio.PacketsRecieved = rtcPeerConnection.AudioRtcpSession.PacketsReceivedCount;
+            //         report.Audio.BytesSent = rtcPeerConnection.AudioRtcpSession.OctetsSentCount;
+            //         report.Audio.BytesReceived = rtcPeerConnection.AudioRtcpSession.OctetsReceivedCount;
+            //     }
+            //     if (rtcPeerConnection.VideoRtcpSession != null)
+            //     {
+            //         report.Video.PacketsSent = rtcPeerConnection.VideoRtcpSession.PacketsSentCount;
+            //         report.Video.PacketsRecieved = rtcPeerConnection.VideoRtcpSession.PacketsReceivedCount;
+            //         report.Video.BytesSent = rtcPeerConnection.VideoRtcpSession.OctetsSentCount;
+            //         report.Video.BytesReceived = rtcPeerConnection.VideoRtcpSession.OctetsReceivedCount;
+            //     }
+            // }
+            return report;
+        }
+
+        public PlaybackStats GetLastFramePlaybackStats()
+        {
+            var playbackStats = new PlaybackStats();
+            if (impl != null)
+            {
+                var implStats = impl.GetLastFramePlaybackStats();
+                playbackStats.volume = implStats.volumeSum;
+                playbackStats.samples = implStats.sampleCount;
+                playbackStats.sampleRate = implStats.sampleRate;
+            }
+            return playbackStats;
         }
     }
 }
